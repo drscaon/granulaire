@@ -26,6 +26,9 @@ Regenerate with `granulat render-gallery` (see Usage).*
   materials, `UsdPhysics` rigid bodies (mass from volume and density,
   convex-hull collision, friction, restitution) and a collision ground.
 - Optionally gives every grain a moisture state through an OpenUSD variant set.
+- Exports packing peanuts as deformable bodies. **Deformable simulation works
+  only with NVIDIA OmniPhysics** (Omniverse, Isaac Sim 5+); see
+  [Deformable grains](#deformable-grains-packing-peanuts).
 
 ## Installation
 
@@ -72,7 +75,7 @@ write_outputs(scene, "output")
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
 | Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
-| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable, no moisture: they dissolve); both **deformable** |
+| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable, no moisture: they dissolve); both **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`) |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
@@ -111,9 +114,22 @@ Contact and cohesion coefficients are indicative and still need calibrating.
 
 ### Deformable grains (packing peanuts)
 
-Core OpenUSD has no deformable-body schema yet: UsdPhysics covers rigid
-bodies. Deformable presets follow NVIDIA's **OmniPhysics deformable schema**
-(Omniverse, Isaac Sim 5), which is built on the core `UsdGeom.TetMesh`:
+> **Works only with NVIDIA OmniPhysics.** Deformable simulation of
+> `packing_peanuts` and `starch_peanuts` requires an engine that reads NVIDIA's
+> OmniPhysics deformable schema: Omniverse Kit and Isaac Sim 5 or later, where
+> PhysX runs it on the GPU. Other tools (Blender, usdview, MuJoCo, Bullet,
+> engines reading only standard UsdPhysics) open the file but see the peanuts
+> as **static meshes with no physics**. For those, export with
+> `--no-deformable` to get ordinary rigid bodies.
+
+Why: core OpenUSD has no deformable-body schema yet. UsdPhysics covers rigid
+bodies only ([UsdPhysics overview](https://openusd.org/dev/api/usd_physics_page_front.html));
+the AOUSD Physics Working Group lists deformable and soft bodies only as a
+possible future extension
+([charter](https://project.linuxfoundation.org/hubfs/AOUSD/Charters/24.12.16%20AOUSD%20Physics%20Working%20Group%20Charter%20-%20Approved.pdf)).
+Deformable presets therefore follow NVIDIA's **OmniPhysics deformable
+schema** ([reference](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/dev_guide/deformables/deformable_bodies.html)),
+built on the core `UsdGeom.TetMesh`:
 
 ```
 /World/Prototypes/Grain_000   Xform  + OmniPhysicsDeformableBodyAPI (omniphysics:mass)
@@ -130,10 +146,13 @@ bodies. Deformable presets follow NVIDIA's **OmniPhysics deformable schema**
   through the bind pose. The tetrahedral volume matches the surface within a
   few percent.
 - The schemas are applied by name, so the file stays valid OpenUSD in any
-  tool; engines that do not know them see a static mesh. `usd-core` does not
-  list unregistered schemas in `GetAppliedSchemas()`, but they are in the
-  file (`apiSchemas` metadata).
-- In Omniverse / Isaac Sim, PhysX simulates deformable bodies on the GPU.
+  tool, but only OmniPhysics acts on them. `usd-core` does not list
+  unregistered schemas in `GetAppliedSchemas()`, but they are in the file
+  (`apiSchemas` metadata).
+- NVIDIA's schema is still evolving (it replaced an earlier PhysX deformable
+  API); if a newer Omniverse release renames attributes, re-export with an
+  updated Granulat. If OpenUSD standardises deformables, the export will move
+  to that schema.
 - `--no-deformable` exports the same presets as rigid bodies.
 - Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1; starch foam: E ≈ 0.8 MPa,
   ν ≈ 0.15) are indicative.
@@ -192,8 +211,8 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 For elongated or flat grains (rice, maize, beans, pellets), the **thickness** is what
 matters for tunnelling, not the nominal size. Packing peanuts are large but
 weigh almost nothing: the mass ratio with anything they touch is the main risk,
-and as deformable bodies they need an engine that supports the OmniPhysics
-deformable schema.
+and as deformable bodies they are simulated only by NVIDIA OmniPhysics (see
+above).
 
 These are orders of magnitude, not hard limits: the actual threshold depends
 on the engine, time step, solver iterations, contact settings and the bodies
@@ -219,9 +238,10 @@ the gravel and pebble presets.
   are visible but not part of the collision shape; hollow shells (whole
   seashells) are not generated. Deformable grains collide with their
   tetrahedral mesh.
-- **Deformables rely on a vendor schema.** Until OpenUSD standardises
-  deformable bodies, only engines that read the OmniPhysics schema simulate
-  them.
+- **Deformables work only with NVIDIA OmniPhysics.** Until OpenUSD standardises
+  deformable bodies, packing peanuts are simulated as deformables only in
+  Omniverse / Isaac Sim (GPU); elsewhere they are static meshes unless exported
+  with `--no-deformable`.
 - **Mesh resolution.** Marching cubes runs on a 48-cell grid along the longest
   axis; the sharpest edges can show slight stair-stepping.
 

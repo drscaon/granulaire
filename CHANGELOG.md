@@ -12,8 +12,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Deformable packing peanuts: `packing_peanuts` (EPS) and `starch_peanuts`,
   new Packaging category. Tube shape family (S, C or straight), tetrahedral
   simulation mesh (`UsdGeom.TetMesh`) and NVIDIA OmniPhysics deformable
-  schemas (body, volume simulation, bind pose, material). `--no-deformable`
-  exports them as rigid bodies.
+  schemas (body, volume simulation, bind pose, material). Deformable
+  simulation works only with NVIDIA OmniPhysics (Omniverse, Isaac Sim 5+);
+  `--no-deformable` exports them as rigid bodies for other engines.
 - Shape families: superellipsoid (kernels, seeds) and cylinder (pellets),
   plus crease, crown dent, kidney bend and axial end cuts.
 - Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge

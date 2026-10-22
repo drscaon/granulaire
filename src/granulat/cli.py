@@ -112,8 +112,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--deformable",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="deformable presets (packing peanuts): TetMesh + OmniPhysics deformable schema "
-        "(off: rigid bodies)",
+        help="deformable presets (packing peanuts): TetMesh + NVIDIA OmniPhysics deformable schema, "
+        "simulated only by Omniverse / Isaac Sim (off: rigid bodies for any engine)",
     )
     g.set_defaults(func=_cmd_generate)
 
