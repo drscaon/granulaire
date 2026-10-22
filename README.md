@@ -111,10 +111,44 @@ Contact and cohesion coefficients are indicative and still need calibrating.
    with a p-norm. Low p gives a rounded grain, high p sharp edges.
 3. Add light surface roughness, then scale to the target nominal diameter.
 
+## Physics limits by grain size
+
+Grains are generated at their **real size**. That is right for rendering and
+perception, but many of them are too small or too light for today's
+rigid-body engines with default settings. Rules of thumb behind the table:
+
+- **Bullet** (PyBullet, Blender) works best with objects larger than ~0.1 m,
+  and Blender's default collision margin is 0.04 m.
+- **PhysX** (Isaac Sim, Omniverse) uses a default `contactOffset` of 0.02 m
+  per shape at metric scale, so two shapes are treated as touching from ~4 cm.
+- **Tunnelling**: at 60 Hz, a grain falling at 1–2 m/s travels 1.7–3.3 cm per
+  step and can pass through surfaces smaller than that without CCD or substeps.
+- **Mass ratio**: iterative solvers become unstable when very light grains
+  touch a much heavier body, such as a robot foot weighing a few kilograms.
+
+| Physics risk | Presets (median size · mean grain mass) | What to do |
+|---|---|---|
+| **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~6 µg), `martian_regolith` (0.13 mm · ~39 µg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~90 µg), `volcanic_sand` (0.53 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
+| **Unstable without tuning** | `rounded_gravel` (5.8 mm · ~0.4 g), `crushed_gravel` (8.1 mm · ~0.8 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
+| **Workable with tuning** | `marble_chips` (11 mm · ~2.4 g), `pozzolana` (12 mm · ~1.5 g, very light), `iron_ore` (16.5 mm · ~20 g) | Same settings as above; check stability against the heaviest body in contact |
+| **Generally fine** | `coal` (23 mm · ~17 g), `beach_pebbles` (39 mm · ~130 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (49 mm · ~260 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
+
+These are orders of magnitude, not hard limits: the actual threshold depends
+on the engine, time step, solver iterations, contact settings and the bodies
+in contact. Scaling grains up changes the physics (mass, inertia, contact
+forces scale differently), so treat it as an approximation of the material.
+
+**Perception is not affected.** Cameras and renderers have no minimum size:
+every preset, including sand and regoliths, can be used at real scale for
+synthetic images, ground-truth masks, grading-from-image benchmarks or
+appearance studies (moisture darkening and gloss). Only dynamics need the
+precautions above. A thin layer of a few hundred grains on a hard surface
+(the "sand on the ramp" case) is also within reach of rigid-body engines for
+the gravel and pebble presets.
+
 ## Known limits
 
-- **Real units.** A sand grain is ~0.35 mm; physics engines are unstable at
-  that scale, so scale up for rigid-body tests.
+- **Real units.** See *Physics limits by grain size* above.
 - **No grain-by-grain physics at large scale.** CPU physics targets a few
   hundred grains; instancing is for rendering surfaces.
 - **Angularity is a proxy**, not Wadell roundness, and is only comparable

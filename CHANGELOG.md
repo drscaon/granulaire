@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- README section on physics limits by grain size: which presets are unstable
+  in current rigid-body engines, recommended settings, and why perception use
+  is unaffected.
+
 ## [0.1.0] - 2026-10-22
 
 ### Added
