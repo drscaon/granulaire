@@ -215,6 +215,24 @@ built on the core `UsdGeom.TetMesh`:
 | `prototypes.npz` | meshes, used by the renderer |
 | `shape_sheet.png`, `mix_preview.png` | previews (`granulaire render`) |
 
+### In Blender
+
+The `.usdc` scene opens directly in Blender (File > Import > USD).
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/blender_gravel.jpg" alt="Crushed gravel grains imported into Blender, falling onto the floor under rigid-body physics"></td>
+    <td width="50%"><img src="docs/images/blender_sand.jpg" alt="Beach sand grains imported into Blender, small rounded grains in varied mineral colours"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Crushed gravel falling onto the floor (Blender rigid-body physics)</sub></td>
+    <td align="center"><sub>Beach sand, rounded grains in mineral colours</sub></td>
+  </tr>
+</table>
+
+<sub>Screenshots from the first version (0.1.0); grain shapes have become more
+varied since then.</sub>
+
 ## Method in brief
 
 Each grain is an implicit volume, meshed with marching cubes:
