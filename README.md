@@ -100,17 +100,44 @@ same seed you compare the same scene with a single difference.
 Every prototype carries a `moisture` variant set (`dry`, `damp`, `wet`,
 `saturated`) and every grain selects its own. A state changes:
 
-- **mass**: absorbed water plus a surface film, capped by the pore water of a
-  heap. Median water content of a beach-sand grain: 3.6 / 14 / 24 %; of a
-  crushed-gravel grain: 0.5 / 1.6 / 2.4 %;
+- **mass**: a wetter grain is **heavier**. Each state stores its own mass
+  (dry mass + water) in `physics:mass`, plus the water alone in
+  `granulat:waterMass`; switching the variant switches the mass;
 - **appearance**: darker colour, lower roughness, clearcoat (UsdPreviewSurface);
 - **contact**: friction and restitution (one UsdPhysics material per state),
   plus capillary cohesion in the custom attribute `granulat:capillaryCohesion`,
   since UsdPhysics has no standard schema for it.
 
+The water comes from two sources: a **surface film**, which weighs a lot on
+small grains (much surface for little mass) and little on pebbles, capped by
+the water the pores of a heap can hold; and **absorbed water**, which
+dominates for porous stone (pozzolana) and for anything that soaks
+(seeds, beans, wood). Median weight gain of one grain, % of its dry mass:
+
+| Material | Damp | Wet | Saturated |
+|---|---|---|---|
+| Beach sand | +3.6 % | +14 % | +24 % |
+| Pozzolana (porous) | +6.2 % | +17 % | +22 % |
+| Crushed gravel | +0.5 % | +1.5 % | +2.3 % |
+| Beach pebbles | +0.2 % | +0.5 % | +0.7 % |
+| Plastic pellets | +1.0 % | +4.0 % | +7.0 % |
+| Wheat | +9.6 % | +26 % | +34 % |
+| Soybeans | +12 % | +34 % | +43 % |
+| Wood pellets | +15 % | +41 % | +52 % |
+| Common beans | +27 % | +73 % | +92 % |
+
+Every preset's values are in `summary.json` (`median_water_content_pct`) and
+per grain in `prototype_metrics.csv` (`mass_<state>_kg`).
+
+- **No swelling.** A wet grain gets heavier but keeps its shape and size. In
+  reality beans, seeds and wood pellets swell when soaked, so their wet
+  density is overstated.
+- **Indicative values.** Water contents, contact and cohesion coefficients
+  are model orders of magnitude, not measurements, and still need
+  calibrating.
+
 In usdview or Omniverse, change a grain's state by changing its variant
 selection. Blender's USD importer takes the state selected at import time.
-Contact and cohesion coefficients are indicative and still need calibrating.
 
 Presets with no moisture states, even with `--moisture`: the regoliths (no
 liquid water) and the polystyrene packing peanuts (EPS never gets wet: water
