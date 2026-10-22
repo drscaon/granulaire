@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- GitHub Actions moved to versions running on Node.js 24 (`actions/checkout@v7`,
+  `actions/setup-python@v7`, `actions/upload-artifact@v7`), removing the
+  Node.js 20 deprecation warnings.
+
 ### Added
 - Continuous integration with GitHub Actions: lint, tests on Python 3.10–3.13
   (Linux) and on macOS and Windows, command-line smoke test, package build and
