@@ -6,7 +6,7 @@ Everything runs on CPU.
 
 ![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
 
-*Five different grains of each of the 15 presets, dry, damp, wet and
+*Five different grains of each of the 21 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
 Regenerate with `granulat render-gallery` (see Usage).*
@@ -15,7 +15,9 @@ Regenerate with `granulat render-gallery` (see Usage).*
 
 - Generates *N* distinct grain shapes (100 by default) from distributions
   borrowed from sedimentology: size on the phi scale (Wentworth), Zingg ratios
-  (elongation I/L, flatness S/I), angularity and mineralogy.
+  (elongation I/L, flatness S/I), angularity, irregularity (fracture faces,
+  lumps, pits) and mineralogy. Kernels, seeds and pellets use their own shape
+  families (superellipsoids, cylinders).
 - Places each shape *k* times (5 by default) in shuffled order with random
   orientations: 500 grains per scene.
 - **Measures** every generated grain (nominal diameter, Zingg ratios, Wadell
@@ -47,7 +49,7 @@ granulat render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
 
 The README gallery comes from generating every preset with `--moisture`, then
-`granulat render-gallery` on all 15 output folders in category order, with
+`granulat render-gallery` on all 21 output folders in category order, with
 `--output docs/images/moisture_gallery.png`.
 
 `python -m granulat ...` works too. From Python:
@@ -68,6 +70,8 @@ write_outputs(scene, "output")
 | Gravel | `rounded_gravel`, `crushed_gravel`, `marble_chips`, `pozzolana` |
 | Pebbles | `river_pebbles`, `beach_pebbles` |
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
+| Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `soybean` |
+| Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
@@ -78,7 +82,7 @@ Values are realistic orders of magnitude, not measurements of a specific deposit
 | Option | On | Off |
 |---|---|---|
 | `--size` | diameter drawn from the grading curve | all at d50 |
-| `--shape` | elongation / flatness drawn | mean values |
+| `--shape` | elongation, flatness and irregularity drawn | mean values |
 | `--roundness` | facets and edge rounding drawn | median values |
 | `--mineralogy` | mineral and tint drawn | dominant mineral |
 | `--orientation` | random orientation | all aligned |
@@ -117,11 +121,20 @@ Contact and cohesion coefficients are indicative and still need calibrating.
 
 ## Method in brief
 
-1. Build a random convex polyhedron: the hull of points drawn on an ellipsoid
-   with Zingg proportions. Few facets give an angular grain.
-2. Round edges and corners by replacing the *max* in the polyhedron's gauge
-   with a p-norm. Low p gives a rounded grain, high p sharp edges.
-3. Add light surface roughness, then scale to the target nominal diameter.
+Each grain is an implicit volume, meshed with marching cubes:
+
+1. **Base body.** Rocks: a random convex polyhedron (the hull of points drawn
+   on an ellipsoid with Zingg proportions; few facets give an angular grain),
+   with edges rounded by replacing the *max* in its gauge with a p-norm (low p
+   gives a rounded grain, high p sharp edges). Kernels and seeds: a
+   superellipsoid. Pellets: a cylinder with rounded end edges.
+2. **Fracture chips.** Random planes cut the body, leaving flat broken faces
+   with sharp edges (crushed stone, broken pebbles, broken pellet ends).
+3. **Taper and irregularity.** An egg or wedge taper along the long axis, then
+   low-frequency lumps, pits (scoria vesicles, flint dents), a crease (wheat),
+   a crown dent (maize) and light roughness.
+4. **Mesh and scale.** Marching cubes on the zero level set, recentring on the
+   centre of mass, scaling to the target nominal diameter.
 
 ## Physics limits by grain size
 
@@ -138,12 +151,15 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 - **Mass ratio**: iterative solvers become unstable when very light grains
   touch a much heavier body, such as a robot foot weighing a few kilograms.
 
-| Physics risk | Presets (median size · mean grain mass) | What to do |
+| Physics risk | Presets (median nominal size · mean grain mass) | What to do |
 |---|---|---|
-| **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~6 µg), `martian_regolith` (0.13 mm · ~39 µg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~90 µg), `volcanic_sand` (0.53 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
-| **Unstable without tuning** | `rounded_gravel` (5.8 mm · ~0.4 g), `crushed_gravel` (8.1 mm · ~0.8 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
-| **Workable with tuning** | `marble_chips` (11 mm · ~2.4 g), `pozzolana` (12 mm · ~1.5 g, very light), `iron_ore` (16.5 mm · ~20 g) | Same settings as above; check stability against the heaviest body in contact |
-| **Generally fine** | `coal` (23 mm · ~17 g), `beach_pebbles` (39 mm · ~130 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (49 mm · ~260 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
+| **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
+| **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
+| **Workable with tuning** | `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
+| **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (40 mm · ~110 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (47 mm · ~240 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
+
+For elongated or flat grains (rice, maize, pellets), the **thickness** is what
+matters for tunnelling, not the nominal size.
 
 These are orders of magnitude, not hard limits: the actual threshold depends
 on the engine, time step, solver iterations, contact settings and the bodies
@@ -165,7 +181,11 @@ the gravel and pebble presets.
   hundred grains; instancing is for rendering surfaces.
 - **Angularity is a proxy**, not Wadell roundness, and is only comparable
   between grains of the same mesh resolution.
-- **Convex grains only**: no fractures or concave shells yet.
+- **Collision uses the convex hull.** Pits, creases and dents are visible but
+  not part of the collision shape; hollow shells (whole seashells) are not
+  generated.
+- **Mesh resolution.** Marching cubes runs on a 48-cell grid along the longest
+  axis; the sharpest edges can show slight stair-stepping.
 
 ## Development
 

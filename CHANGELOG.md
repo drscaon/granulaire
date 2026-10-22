@@ -7,11 +7,31 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Agricultural presets: `wheat`, `maize`, `rice`, `soybean`; pellet presets:
+  `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
+- Shape families: superellipsoid (kernels, seeds) and cylinder (pellets),
+  plus crease, crown dent and axial end cuts.
+- Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge
+  taper and pits, so material families look clearly different.
 - `granulat render-gallery`: several grains per preset shown in every
-  moisture state; README illustrated with the 15-preset gallery.
+  moisture state; README illustrated with the gallery of all presets.
 - README section on physics limits by grain size: which presets are unstable
   in current rigid-body engines, recommended settings, and why perception use
   is unaffected.
+
+### Changed
+- Grains are meshed from implicit volumes with marching cubes (new
+  dependency: scikit-image). Triangles stay well shaped on flat fracture
+  faces; meshes are watertight.
+- Shapes generated for a given seed differ from 0.1.0; each grain now uses its
+  own random stream.
+- L, I and S are measured along the principal axes (faster than the
+  minimum-volume box); all metrics are computed at unit scale so micron-sized
+  grains are measured reliably.
+
+### Fixed
+- Dark scratch marks on flat faces of crushed grains (folded sliver triangles).
+- Measurement failure on the smallest regolith grains.
 
 ## [0.1.0] - 2026-10-22
 
