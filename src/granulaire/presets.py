@@ -25,8 +25,11 @@ rather than a single shape:
   chip_axis="x" shape kernels and pellet ends (see granulaire/shape.py);
 - kind "tube" (packing peanuts): a rounded tube along an S, C or straight
   curve (`curves` weights, `curve_amplitude`), radius `aspect`;
-- deformable: Young's modulus, Poisson's ratio and simulation-mesh
-  resolution for grains exported as deformable bodies (see usd_export.py);
+- deformable: Young's modulus, Poisson's ratio, elasticity damping (1/s,
+  how much energy a deformation loses, hence how much the grain bounces) and
+  simulation-mesh resolution for grains exported as deformable bodies (see usd_export.py);
+- surface_roughness: visual roughness of the dry surface (default 0.85,
+  matte); lower for glossy skins (fruit);
 - sphere: True for exact spheres (glass beads, the reference);
 - category: display family (see CATEGORIES).
 
@@ -364,6 +367,37 @@ PRESETS = {
             ("shale", 0.10, (0.30, 0.30, 0.30)),
         ],
     },
+    "rubber_mulch": {
+        "category": "Industrial",
+        "label": "Rubber mulch (recycled tyres)",
+        # shredded tyre chunks for playgrounds and landscaping: torn, irregular,
+        # somewhat flat nuggets; grippy and bouncy
+        "phi_mean": -4.3,  # ~20 mm (sold as 10-20 mm or 3/8"-3/4" nuggets)
+        "phi_std": 0.35,
+        "elongation_beta": (4.0, 3.0),  # I/L ~0.57
+        "flatness_beta": (4.0, 3.0),  # S/I ~0.57
+        "flatness_min": 0.35,
+        "facets": (7, 13),
+        "roundness_p": (5.0, 12.0),  # torn and cut edges, barely softened
+        "roughness": 0.02,  # torn rubber, fibrous surface
+        "lumpiness": (0.08, 0.20),
+        "taper": 0.2,
+        "chips": (2, 4),  # flat cut faces from the shredder
+        "chip_depth": (0.55, 0.85),
+        "density": 1150.0,  # vulcanised rubber
+        "friction": 0.85,  # rubber on rubber
+        "restitution": 0.55,
+        "absorption": 0.0,  # rubber does not absorb water: surface film only
+        "surface_roughness": 0.9,  # matte
+        "subdivisions": 4,
+        # natural black with some dyed nuggets ("mixed colour" playground grade)
+        "minerals": [
+            ("black rubber", 0.55, (0.07, 0.07, 0.07)),
+            ("red-dyed rubber", 0.15, (0.48, 0.16, 0.12)),
+            ("brown-dyed rubber", 0.15, (0.36, 0.23, 0.14)),
+            ("green-dyed rubber", 0.15, (0.20, 0.36, 0.20)),
+        ],
+    },
     # ---------------------------------------------------------- Agricultural
     "wheat": {
         "category": "Agricultural",
@@ -497,6 +531,44 @@ PRESETS = {
             ("brown bean", 0.08, (0.55, 0.40, 0.25)),
         ],
     },
+    "cherry_tomatoes": {
+        "category": "Agricultural",
+        "label": "Cherry tomatoes",
+        "kind": "superellipsoid",
+        "exponent": 2.0,  # smooth, round fruit
+        "phi_mean": -4.6,  # ~24 mm
+        "phi_std": 0.18,  # graded fruit
+        "elongation_beta": (30.0, 2.0),  # I/L ~0.94: round in plan
+        "flatness_beta": (12.0, 2.0),  # S/I ~0.86: slightly flattened at the poles
+        "dent": (0.05, 0.09, 0.16),  # stem scar
+        "dent_dir": (0.0, 0.0, 1.0),
+        "lumpiness": (0.0, 0.025),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1000.0,
+        "friction": 0.45,
+        "restitution": 0.20,
+        "absorption": 0.0,
+        "moisture": False,  # waxy skin: water beads and runs off
+        "moisture_note": "waxy skin",
+        "surface_roughness": 0.25,  # glossy skin
+        # soft fruit that keeps its volume when squeezed; order of magnitude of
+        # the apparent modulus of a whole cherry tomato in compression
+        # elasticity_damping (1/s, PhysX): uncalibrated starting point
+        "deformable": {
+            "youngs_modulus": 5.0e5,
+            "poissons_ratio": 0.45,
+            "elasticity_damping": 0.01,
+            "tet_resolution": 9,  # ~1,000-1,500 tetrahedra per tomato, like a peanut
+        },
+        "subdivisions": 4,
+        "minerals": [
+            ("red", 0.70, (0.74, 0.10, 0.07)),
+            ("deep red", 0.20, (0.52, 0.06, 0.05)),
+            ("orange-red", 0.10, (0.84, 0.30, 0.08)),
+        ],
+    },
     # --------------------------------------------------------------- Pellets
     "plastic_pellets": {
         "category": "Pellets",
@@ -574,7 +646,13 @@ PRESETS = {
         "absorption": 0.0,
         "moisture": False,  # closed-cell polystyrene: water runs off, the peanut stays dry
         "moisture_note": "water runs off",
-        "deformable": {"youngs_modulus": 1.0e6, "poissons_ratio": 0.10, "tet_resolution": 18},
+        # elasticity_damping (1/s, PhysX): uncalibrated starting point, foam is lossy
+        "deformable": {
+            "youngs_modulus": 1.0e6,
+            "poissons_ratio": 0.10,
+            "elasticity_damping": 0.02,
+            "tet_resolution": 18,
+        },
         "subdivisions": 4,
         "minerals": [
             ("white EPS", 0.60, (0.95, 0.95, 0.93)),

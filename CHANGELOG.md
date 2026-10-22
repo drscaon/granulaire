@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Grains in the OpenUSD scene are spaced from their full reach (bounding
+  sphere), so angular grains can no longer start in contact with a neighbour.
+- `mix_preview.png` places grains without overlaps and follows `--no-shuffle`.
+- README: deformable grains are stated as untested in Isaac Sim.
 - River and beach pebbles now differ in shape and material:
   - `river_pebbles`: rounder and more equant (mean S/I ~0.71), uniformly
     smooth, no fracture chips; earthy mix of tan quartzite, grey granite, brown
@@ -22,6 +26,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
   below 1 with a clear message; their defaults (100 and 5) are shown in the help.
 
 ### Added
+- `rubber_mulch` preset (Industrial): shredded recycled-tyre nuggets, ~20 mm,
+  torn and jagged, very grippy (friction 0.85) and bouncy (restitution 0.55),
+  natural black with dyed nuggets; surface water only.
+- `cherry_tomatoes` preset (Agricultural): ~25 mm glossy fruit with a stem
+  scar, deformable (E ≈ 0.5 MPa, ν ≈ 0.45) for NVIDIA OmniPhysics, no moisture.
+- `surface_roughness` preset entry: glossy surfaces (fruit skin) in the USD
+  materials and the previews.
+- Deformable materials also apply `OmniPhysicsBaseMaterialAPI` (density,
+  friction) and `PhysxDeformableMaterialAPI` with
+  `physxDeformableMaterial:elasticityDamping`, which controls how much a
+  deformable grain bounces (starting values, uncalibrated).
 - README section "Friction and restitution": values per preset and moisture
   state, which engines use them, and limits (cohesion, rolling resistance).
 - Shuffling is optional: `--no-shuffle` on the command line, `shuffle=False` in

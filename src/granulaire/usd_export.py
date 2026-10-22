@@ -22,7 +22,7 @@ moisture is enabled, mass and material bindings are therefore authored ONLY
 inside the variants, never directly on the prototype; each grain picks its
 variant through a local selection.
 
-Deformable grains (packing peanuts). Core OpenUSD has no deformable-body
+Deformable grains (packing peanuts, cherry tomatoes). Core OpenUSD has no deformable-body
 schema yet (UsdPhysics covers rigid bodies), so these follow NVIDIA's
 OmniPhysics deformable schema (Omniverse / Isaac Sim 5), built on the core
 UsdGeom.TetMesh. The API schemas are applied by name: the file stays valid
@@ -34,8 +34,10 @@ OpenUSD for any tool, and engines that know the schema simulate it.
     /sim                       TetMesh + OmniPhysicsVolumeDeformableSimAPI
                                + OmniPhysicsDeformablePoseAPI:custom
                                + UsdPhysics CollisionAPI (single collider)
-  /Looks/Phys[_<state>]        OmniPhysicsDeformableMaterialAPI: Young's
-                               modulus, Poisson's ratio, density, friction
+  /Looks/Phys[_<state>]        OmniPhysicsBaseMaterialAPI (density, friction)
+                               + OmniPhysicsDeformableMaterialAPI (Young's
+                               modulus, Poisson's ratio)
+                               + PhysxDeformableMaterialAPI (elasticity damping)
 """
 
 import numpy as np
@@ -68,10 +70,21 @@ def _make_phys_material(stage, path, friction, restitution):
     return mat
 
 
-def _make_deformable_material(stage, path, friction, density, youngs_modulus, poissons_ratio):
+def _make_deformable_material(
+    stage, path, friction, density, youngs_modulus, poissons_ratio, elasticity_damping=0.0
+):
+    """Deformable material: OmniPhysics elasticity (Young's modulus, Poisson's
+    ratio) on top of the OmniPhysics base material (density, friction), plus
+    PhysX elasticity damping (1/s), which sets how much a deformable grain
+    bounces back. Schemas are applied by name (not registered in usd-core)."""
     mat = UsdShade.Material.Define(stage, path)
     prim = mat.GetPrim()
-    prim.AddAppliedSchema("OmniPhysicsDeformableMaterialAPI")
+    for schema in (
+        "OmniPhysicsBaseMaterialAPI",
+        "OmniPhysicsDeformableMaterialAPI",
+        "PhysxDeformableMaterialAPI",
+    ):
+        prim.AddAppliedSchema(schema)
     for name, value in [
         ("omniphysics:youngsModulus", youngs_modulus),
         ("omniphysics:poissonsRatio", poissons_ratio),
@@ -79,6 +92,7 @@ def _make_deformable_material(stage, path, friction, density, youngs_modulus, po
         # PhysX deformables ignore static friction: use dynamic friction
         ("omniphysics:dynamicFriction", friction),
         ("omniphysics:staticFriction", friction),
+        ("physxDeformableMaterial:elasticityDamping", elasticity_damping),
     ]:
         prim.CreateAttribute(name, Sdf.ValueTypeNames.Float).Set(float(value))
     return mat
@@ -138,6 +152,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
     UsdGeom.Scope.Define(stage, "/World/Looks")
 
     mu = preset.get("friction", 0.6)
+    surface_rough = preset.get("surface_roughness", STATE_PARAMS["dry"]["rough"])
     e = preset.get("restitution", 0.1)
 
     def phys_material(path, state):
@@ -151,6 +166,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
                 preset["density"],
                 deformable["youngs_modulus"],
                 deformable["poissons_ratio"],
+                deformable.get("elasticity_damping", 0.0),
             )
         return _make_phys_material(stage, path, mu * k_mu, e * k_e)
 
@@ -221,7 +237,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
 
         if not states:
             mass_attr.Set(float(proto["mass"]))
-            mat = _make_material(stage, f"/World/Looks/Mat_{i:03d}", proto["color"], 0.85)
+            mat = _make_material(stage, f"/World/Looks/Mat_{i:03d}", proto["color"], surface_rough)
             mesh.CreateDisplayColorAttr([Gf.Vec3f(*proto["color"])])
             bind(mat, phys[None])
             continue
@@ -231,7 +247,11 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
         for s in states:
             p = STATE_PARAMS[s]
             mats[s] = _make_material(
-                stage, f"/World/Looks/Mat_{i:03d}_{s}", wet_color(proto["color"], s), p["rough"], p["coat"]
+                stage,
+                f"/World/Looks/Mat_{i:03d}_{s}",
+                wet_color(proto["color"], s),
+                min(p["rough"], surface_rough),
+                p["coat"],
             )
         # mass attribute declared above without a local value: one here would hide the variants
 

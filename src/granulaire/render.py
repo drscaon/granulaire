@@ -55,8 +55,12 @@ def _yaw(a):
     return (np.cos(a / 2), 0.0, 0.0, np.sin(a / 2))
 
 
-def shade_mesh(verts, faces, color, state=None):
-    """Visible faces of a mesh already in camera space (z towards the eye)."""
+def shade_mesh(verts, faces, color, state=None, surface_rough=None):
+    """Visible faces of a mesh already in camera space (z towards the eye).
+
+    surface_rough: the preset's dry surface roughness (glossy fruit skin); it
+    adds a highlight to dry grains and caps the roughness of wet ones.
+    """
     tri = verts[faces]
     n = np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0])
     n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-20
@@ -64,10 +68,11 @@ def shade_mesh(verts, faces, color, state=None):
     n = n[visible]
     base = np.asarray(wet_color(color, state) if state else color)
     rgb = base[None, :] * (0.28 + 0.85 * np.clip(n @ LIGHT, 0, 1)[:, None])
-    if state:
-        p = STATE_PARAMS[state]
-        shininess = 4 + 300 * (1 - p["rough"]) ** 2
-        strength = 0.04 + 0.5 * (1 - p["rough"]) * (0.5 + 0.5 * p["coat"])
+    if state or surface_rough is not None:
+        p = STATE_PARAMS[state or "dry"]
+        rough = p["rough"] if surface_rough is None else min(p["rough"], surface_rough)
+        shininess = 4 + 300 * (1 - rough) ** 2
+        strength = 0.04 + 0.5 * (1 - rough) * (0.5 + 0.5 * p["coat"])
         rgb = rgb + (strength * np.clip(n @ HALF, 0, 1) ** shininess)[:, None]
     depth = tri[visible][:, :, 2].mean(axis=1)
     return tri[visible][:, :, :2], np.clip(rgb, 0, 1), depth
@@ -76,6 +81,12 @@ def shade_mesh(verts, faces, color, state=None):
 def _load(folder: Path):
     summary = json.loads((folder / "summary.json").read_text())
     return summary, np.load(folder / "prototypes.npz")
+
+
+def _surface_rough(summary):
+    from .presets import PRESETS
+
+    return PRESETS.get(summary["preset"], {}).get("surface_roughness")
 
 
 def shape_sheet(folder: Path) -> Path:
@@ -96,7 +107,7 @@ def shape_sheet(folder: Path) -> Path:
         # each grain laid flat on its largest face (S axis vertical), seen at three-quarters
         c = np.linalg.svd(v - v.mean(axis=0), full_matrices=False)[2]
         v = (v @ c.T) @ quat_to_matrix(*_yaw(rng.uniform(0, 2 * np.pi))).T @ R_VIEW.T
-        poly, rgb, depth = shade_mesh(v, data[f"f{i}"], colors[i])
+        poly, rgb, depth = shade_mesh(v, data[f"f{i}"], colors[i], surface_rough=_surface_rough(summary))
         order = np.argsort(depth)
         ax.add_collection(
             PolyCollection(poly[order], facecolors=rgb[order], edgecolors="none", antialiased=False)
@@ -120,24 +131,50 @@ def shape_sheet(folder: Path) -> Path:
     return out
 
 
+def _place_footprints(radii, rng, fill=0.45, tries=400):
+    """Non-overlapping positions for circular footprints (random sequential
+    placement, largest first) in a square sized for the given area fill."""
+    order = np.argsort(-radii)
+    side = np.sqrt(np.pi * np.sum(radii**2) / fill)
+    while True:
+        placed = np.empty((0, 2))
+        placed_r = np.empty(0)
+        centers = np.zeros((len(radii), 2))
+        for i in order:
+            r = radii[i]
+            lo, hi = -side / 2 + r, side / 2 - r
+            cand = rng.uniform(lo, hi, (tries, 2)) if hi > lo else np.zeros((1, 2))
+            if len(placed):
+                gap = np.linalg.norm(cand[:, None] - placed[None], axis=2) - (r + placed_r)[None]
+                ok = np.nonzero((gap >= 0).all(axis=1))[0]
+            else:
+                ok = np.arange(len(cand))
+            if not len(ok):
+                break
+            centers[i] = cand[ok[0]]
+            placed = np.vstack([placed, centers[i]])
+            placed_r = np.append(placed_r, r)
+        else:
+            return centers
+        side *= 1.05  # too tight for this mix: enlarge the square and start again
+
+
 def mix_preview(folder: Path, copies: int = 5, seed: int = 3) -> Path:
     """One layer of mixed grains resting on the ground, seen at three-quarters:
-    each shape appears `copies` times at its true size with a random orientation."""
+    each shape appears `copies` times at its true size with a random orientation,
+    without overlapping its neighbours."""
     plt, PolyCollection = _plt()
     summary, data = _load(folder)
     colors = data["colors"]
     n_shapes = len(colors)
     rng = np.random.default_rng(seed)
-    order = rng.permutation(np.repeat(np.arange(n_shapes), copies))
+    grouped = np.repeat(np.arange(n_shapes), copies)
+    order = rng.permutation(grouped) if summary.get("shuffled", True) else grouped
     proto = [data[f"v{i}"] for i in range(n_shapes)]
-    d = np.median([np.ptp(p, axis=0).max() for p in proto])
-    side = int(np.ceil(np.sqrt(len(order))))
-    pitch = 0.95 * d
 
-    polys, rgbs, depths = [], [], []
-    for j, k in enumerate(order):
-        pos = np.array([(j % side - side / 2) * pitch, (j // side - side / 2) * pitch, 0.0])
-        pos[:2] += rng.uniform(-0.3, 0.3, 2) * pitch
+    # orient every grain, rest it on the ground and measure its footprint
+    grains = []
+    for k in order:
         u1, u2, u3 = rng.random(3)
         a, b = np.sqrt(1 - u1), np.sqrt(u1)
         q = (
@@ -148,7 +185,15 @@ def mix_preview(folder: Path, copies: int = 5, seed: int = 3) -> Path:
         )
         v = proto[k] @ quat_to_matrix(*q).T
         v[:, 2] -= v[:, 2].min()
-        p, c, z = shade_mesh((v + pos) @ R_VIEW.T, data[f"f{k}"], colors[k])
+        v[:, :2] -= (v[:, :2].min(axis=0) + v[:, :2].max(axis=0)) / 2
+        grains.append((k, v, np.linalg.norm(v[:, :2], axis=1).max()))
+    centers = _place_footprints(np.array([r for _, _, r in grains]), rng)
+
+    polys, rgbs, depths = [], [], []
+    for (k, v, _), (x, y) in zip(grains, centers, strict=True):
+        p, c, z = shade_mesh(
+            (v + (x, y, 0.0)) @ R_VIEW.T, data[f"f{k}"], colors[k], surface_rough=_surface_rough(summary)
+        )
         polys.append(p)
         rgbs.append(c)
         depths.append(z)
@@ -165,8 +210,8 @@ def mix_preview(folder: Path, copies: int = 5, seed: int = 3) -> Path:
     ax.set_aspect("equal")
     ax.set_axis_off()
     ax.set_title(
-        f"{summary['label']} — {len(order)} grains ({n_shapes} shapes × {copies}, shuffled, "
-        "random orientations)",
+        f"{summary['label']} — {len(order)} grains ({n_shapes} shapes × {copies}, "
+        f"{'shuffled' if summary.get('shuffled', True) else 'grouped by shape'}, random orientations)",
         fontsize=12,
         color=INK,
         loc="left",
@@ -260,7 +305,7 @@ def moisture_states(folders: list[Path], out: Path) -> Path:
         for col, s in enumerate(STATES):
             ax = axes[r, col]
             ax.set_axis_off()
-            poly, rgb, depth = shade_mesh(v, f, color, s)
+            poly, rgb, depth = shade_mesh(v, f, color, s, _surface_rough(summary))
             order = np.argsort(depth)
             ax.add_collection(
                 PolyCollection(poly[order], facecolors=rgb[order], edgecolors="none", antialiased=False)
@@ -363,7 +408,7 @@ def moisture_gallery(folders: list[Path], out: Path, grains: int = 5, tile: floa
             for g, (v, f, color) in enumerate(views):
                 ax = fig.add_axes(box(x0 + g * tile, y0, tile, tile))
                 ax.set_axis_off()
-                poly, rgb, depth = shade_mesh(v, f, color, s)
+                poly, rgb, depth = shade_mesh(v, f, color, s, preset.get("surface_roughness"))
                 order = np.argsort(depth)
                 ax.add_collection(
                     PolyCollection(poly[order], facecolors=rgb[order], edgecolors="none", antialiased=False)

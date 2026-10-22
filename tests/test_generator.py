@@ -113,12 +113,13 @@ def _api_schemas(prim):
     return op.ApplyOperations([]) if op else []
 
 
-def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
+@pytest.mark.parametrize("key", ["packing_peanuts", "cherry_tomatoes"])
+def test_deformable_grains_follow_the_omniphysics_layout(key, tmp_path):
     from pxr import UsdGeom
 
-    scene = generate_scene("packing_peanuts", shapes=3, copies=1, seed=2)
+    scene = generate_scene(key, shapes=3, copies=1, seed=2)
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / "granulaire_packing_peanuts.usdc"))
+    stage = Usd.Stage.Open(str(folder / f"granulaire_{key}.usdc"))
     for prim, inst in zip(stage.GetPrimAtPath("/World/Grains").GetChildren(), scene.instances, strict=True):
         assert "OmniPhysicsDeformableBodyAPI" in _api_schemas(prim)
         assert not prim.HasAPI(UsdPhysics.RigidBodyAPI)
@@ -135,8 +136,14 @@ def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
         assert "OmniPhysicsDeformablePoseAPI:custom" in _api_schemas(prim.GetChild("geom"))
 
         physics = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial("physics")[0].GetPrim()
-        assert "OmniPhysicsDeformableMaterialAPI" in _api_schemas(physics)
+        for schema in (
+            "OmniPhysicsBaseMaterialAPI",
+            "OmniPhysicsDeformableMaterialAPI",
+            "PhysxDeformableMaterialAPI",
+        ):
+            assert schema in _api_schemas(physics)
         assert physics.GetAttribute("omniphysics:youngsModulus").Get() > 0
+        assert physics.GetAttribute("physxDeformableMaterial:elasticityDamping").Get() > 0
 
 
 def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
@@ -148,8 +155,9 @@ def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
     assert not prim.GetChild("sim")
 
 
-def test_tetrahedra_fill_the_grain():
-    scene = generate_scene("packing_peanuts", shapes=2, copies=1)
+@pytest.mark.parametrize("key", ["packing_peanuts", "cherry_tomatoes"])
+def test_tetrahedra_fill_the_grain(key):
+    scene = generate_scene(key, shapes=2, copies=1)
     for p in scene.prototypes:
         pts = p["tet_points"][p["tets"]]
         vol = np.einsum(
@@ -159,9 +167,9 @@ def test_tetrahedra_fill_the_grain():
         assert vol.sum() / 6 == pytest.approx(p["metrics"]["volume_m3"], rel=0.15)
 
 
-@pytest.mark.parametrize("key", ["packing_peanuts"])
-def test_packing_peanuts_have_no_moisture_states(key, tmp_path):
-    # expanded polystyrene never gets wet: water runs off
+@pytest.mark.parametrize("key", ["packing_peanuts", "cherry_tomatoes"])
+def test_water_repellent_grains_have_no_moisture_states(key, tmp_path):
+    # expanded polystyrene and waxy tomato skin never get wet: water runs off
     scene = generate_scene(key, shapes=2, copies=1, variations=Variations(moisture=True))
     assert scene.states is None and scene.variations.moisture is False
     folder = write_outputs(scene, tmp_path)
