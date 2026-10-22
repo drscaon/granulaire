@@ -43,6 +43,24 @@ def test_generate_with_toggles(tmp_path, capsys):
     assert summary["moisture"]["grains_per_state"]["wet"] == 4
 
 
+def test_generate_no_shuffle(tmp_path):
+    args = ["generate", "--preset", "glass_beads", "--shapes", "3", "--copies", "2", "--no-shuffle"]
+    assert main([*args, "--out", str(tmp_path)]) == 0
+    summary = json.loads((tmp_path / "glass_beads" / "summary.json").read_text())
+    assert summary["shuffled"] is False
+    assert summary["shapes"] == 3 and summary["grains"] == 6
+    rows = (tmp_path / "glass_beads" / "instances.csv").read_text().splitlines()
+    assert len(rows) == 7
+
+
+@pytest.mark.parametrize("option", ["--shapes", "--copies"])
+def test_generate_rejects_non_positive_counts(option, capsys):
+    with pytest.raises(SystemExit) as err:
+        main(["generate", option, "0"])
+    assert err.value.code == 2
+    assert "must be at least 1" in capsys.readouterr().err
+
+
 def test_render(tmp_path):
     pytest.importorskip("matplotlib")
     main(

@@ -1,7 +1,7 @@
 """Command-line interface.
 
 granulaire list
-granulaire generate --preset beach_sand [--shapes 100] [--copies 5] [--seed 1]
+granulaire generate --preset beach_sand [--shapes 100] [--copies 5] [--no-shuffle] [--seed 1]
                   [--no-size] [--no-shape] [--no-roundness] [--no-mineralogy]
                   [--no-orientation] [--moisture] [--moisture-weights 40,30,20,10]
 granulaire render output/beach_sand output/crushed_gravel
@@ -40,12 +40,26 @@ def _cmd_list(_args) -> int:
     return 0
 
 
+def _positive_int(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be at least 1, got {value}")
+    return value
+
+
 def _cmd_generate(args) -> int:
     var = Variations(**{k: getattr(args, k) for k in VARIATION_HELP}, moisture=args.moisture)
     if args.moisture and not moisture_applies(args.preset):
         print(f"moisture ignored: not applicable to '{PRESETS[args.preset]['label']}'")
     scene = generate_scene(
-        args.preset, args.shapes, args.copies, args.seed, var, args.moisture_weights, args.deformable
+        args.preset,
+        args.shapes,
+        args.copies,
+        args.seed,
+        var,
+        args.moisture_weights,
+        args.deformable,
+        args.shuffle,
     )
     out = write_outputs(scene, args.out)
     summary = summarize(scene)
@@ -94,8 +108,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     g = sub.add_parser("generate", help="generate a grain library and an OpenUSD scene")
     g.add_argument("--preset", default="beach_sand", choices=sorted(PRESETS))
-    g.add_argument("--shapes", type=int, default=100, help="number of distinct shapes")
-    g.add_argument("--copies", type=int, default=5, help="copies of each shape")
+    g.add_argument(
+        "--shapes", type=_positive_int, default=100, help="number of distinct shapes (default: 100)"
+    )
+    g.add_argument("--copies", type=_positive_int, default=5, help="copies of each shape (default: 5)")
+    g.add_argument(
+        "--shuffle",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="mix the copies in random order (--no-shuffle: copies of each shape side by side)",
+    )
     g.add_argument("--seed", type=int, default=1)
     g.add_argument("--out", default="output", help="output root folder")
     for name, text in VARIATION_HELP.items():

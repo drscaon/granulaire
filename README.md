@@ -36,8 +36,9 @@ Regenerate with `granulaire render-gallery` (see Usage).*
   (elongation I/L, flatness S/I), angularity, irregularity (fracture faces,
   lumps, pits) and mineralogy. Kernels, seeds and pellets use their own shape
   families (superellipsoids, cylinders).
-- Places each shape *k* times (5 by default) in shuffled order with random
-  orientations: 500 grains per scene.
+- Places each shape several times in shuffled order with random orientations:
+  by default 100 shapes × 5 copies = 500 grains per scene (see
+  [Scene size and mixing](#scene-size-and-mixing)).
 - **Measures** every generated grain (nominal diameter, Zingg ratios, Wadell
   sphericity, convexity, angularity proxy) instead of trusting the inputs.
 - Exports an OpenUSD scene: prototypes, grains by reference, UsdPreviewSurface
@@ -61,7 +62,8 @@ Requires Python 3.10+.
 
 ```bash
 granulaire list
-granulaire generate --preset beach_sand --shapes 100 --copies 5 --seed 1
+granulaire generate --preset beach_sand          # 100 shapes × 5 copies, shuffled
+granulaire generate --preset beach_sand --shapes 20 --copies 10 --no-shuffle --seed 3
 granulaire generate --preset beach_pebbles --moisture --moisture-weights 0,20,50,30
 granulaire generate --preset rounded_gravel --no-size --no-orientation
 granulaire render output/beach_sand output/crushed_gravel
@@ -78,9 +80,23 @@ The README gallery comes from generating every preset with `--moisture`, then
 ```python
 from granulaire import Variations, generate_scene, write_outputs
 
-scene = generate_scene("beach_sand", shapes=100, copies=5, seed=1, variations=Variations(moisture=True))
+scene = generate_scene("beach_sand", variations=Variations(moisture=True))  # 100 × 5, shuffled
+small = generate_scene("crushed_gravel", shapes=20, copies=10, shuffle=False, seed=3)
 write_outputs(scene, "output")
 ```
+
+### Scene size and mixing
+
+| Option (CLI / Python) | Default | Effect |
+|---|---|---|
+| `--shapes N` / `shapes=N` | 100 | number of distinct grain shapes |
+| `--copies K` / `copies=K` | 5 | how many times each shape is placed; the scene has N × K grains |
+| `--no-shuffle` / `shuffle=False` | shuffled | place the copies of each shape side by side, shape after shape, instead of mixing them, e.g. to compare shapes |
+| `--seed S` / `seed=S` | 1 | random seed; the same options and seed give the same scene |
+
+`--shapes` and `--copies` must be at least 1. Turning shuffling off changes
+only which shape goes in which slot: shapes, positions and orientations stay
+the same.
 
 ### Presets
 

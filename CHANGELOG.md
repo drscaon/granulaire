@@ -10,8 +10,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - GitHub Actions moved to versions running on Node.js 24 (`actions/checkout@v7`,
   `actions/setup-python@v7`, `actions/upload-artifact@v7`), removing the
   Node.js 20 deprecation warnings.
+- `--shapes` and `--copies` (and `shapes=`, `copies=` in Python) reject values
+  below 1 with a clear message; their defaults (100 and 5) are shown in the help.
 
 ### Added
+- Shuffling is optional: `--no-shuffle` on the command line, `shuffle=False` in
+  `generate_scene`, places the copies of each shape side by side. Shapes,
+  positions and orientations are unchanged. `summary.json` records `shuffled`.
 - Blender screenshots of gravel and sand in the README ("In Blender").
 - Continuous integration with GitHub Actions: lint, tests on Python 3.10–3.13
   (Linux) and on macOS and Windows, command-line smoke test, package build and

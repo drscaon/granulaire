@@ -36,6 +36,30 @@ def test_variations_do_not_shift_other_draws():
     assert all(i["orient"] == (1.0, 0.0, 0.0, 0.0) for i in no_orient.instances)
 
 
+def test_default_scene_is_100_shapes_by_5_copies_shuffled():
+    scene = generate_scene("glass_beads")
+    assert len(scene.prototypes) == 100
+    assert len(scene.instances) == 500
+    assert scene.shuffle is True
+    assert list(scene.order) != sorted(scene.order)
+
+
+def test_no_shuffle_groups_copies_and_keeps_the_rest():
+    ref = generate_scene("beach_sand", **SMALL)
+    grouped = generate_scene("beach_sand", **SMALL, shuffle=False)
+    assert [i["proto"] for i in grouped.instances] == [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+    assert sorted(i["proto"] for i in ref.instances) == [i["proto"] for i in grouped.instances]
+    np.testing.assert_allclose(_diameters(grouped), _diameters(ref))
+    assert [i["position"] for i in grouped.instances] == [i["position"] for i in ref.instances]
+    assert [i["orient"] for i in grouped.instances] == [i["orient"] for i in ref.instances]
+
+
+@pytest.mark.parametrize("shapes, copies", [(0, 5), (3, 0), (-1, 1)])
+def test_shapes_and_copies_must_be_positive(shapes, copies):
+    with pytest.raises(ValueError):
+        generate_scene("beach_sand", shapes=shapes, copies=copies)
+
+
 def test_moisture_is_ignored_for_regolith():
     scene = generate_scene("lunar_regolith", **SMALL, variations=Variations(moisture=True))
     assert scene.states is None
