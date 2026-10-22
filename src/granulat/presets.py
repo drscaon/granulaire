@@ -17,11 +17,16 @@ rather than a single shape:
 - minerals: colours and proportions (rendering), density (mass);
 - absorption: water absorbed by the grain at saturation, as a fraction of its
   dry mass (internal porosity; see granulat/moisture.py);
-- moisture: False for a material where water makes no sense (regoliths);
+- moisture: False for a material where water makes no sense (regoliths) or
+  is not modelled (starch dissolves); moisture_note says why;
 - kind: base body, "rock" (default, random polyhedron), "superellipsoid"
   (kernels and seeds, with `exponent`) or "cylinder" (pellets, with
   `exponent` and `aspect` = radius / half-length range); crease, dent and
   chip_axis="x" shape kernels and pellet ends (see granulat/shape.py);
+- kind "tube" (packing peanuts): a rounded tube along an S, C or straight
+  curve (`curves` weights, `curve_amplitude`), radius `aspect`;
+- deformable: Young's modulus, Poisson's ratio and simulation-mesh
+  resolution for grains exported as deformable bodies (see usd_export.py);
 - sphere: True for exact spheres (glass beads, the reference);
 - category: display family (see CATEGORIES).
 
@@ -30,7 +35,17 @@ deposit.
 """
 
 # display order of the categories
-CATEGORIES = ["Sand", "Gravel", "Pebbles", "Industrial", "Agricultural", "Pellets", "Space", "Reference"]
+CATEGORIES = [
+    "Sand",
+    "Gravel",
+    "Pebbles",
+    "Industrial",
+    "Agricultural",
+    "Pellets",
+    "Packaging",
+    "Space",
+    "Reference",
+]
 
 PRESETS = {
     # ------------------------------------------------------------------ Sand
@@ -532,6 +547,62 @@ PRESETS = {
             ("light wood", 0.60, (0.72, 0.58, 0.40)),
             ("dark wood", 0.30, (0.55, 0.42, 0.28)),
             ("bark-rich", 0.10, (0.42, 0.32, 0.22)),
+        ],
+    },
+    # ------------------------------------------------------------- Packaging
+    "packing_peanuts": {
+        "category": "Packaging",
+        "label": "Packing peanuts (EPS)",
+        "kind": "tube",
+        "curves": {"S": 0.75, "C": 0.25},
+        "curve_amplitude": (0.30, 0.45),
+        "aspect": (0.32, 0.42),  # tube radius / half-length
+        "phi_mean": -4.3,  # ~20 mm nominal, ~35-40 mm long
+        "phi_std": 0.12,
+        "elongation_beta": (1.0, 1.0),  # unused for tubes
+        "flatness_beta": (14.0, 4.0),  # cross-section ~0.78
+        "lumpiness": (0.0, 0.03),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.01,  # fused-bead texture
+        "density": 12.0,  # expanded polystyrene, piece density
+        "friction": 0.50,
+        "restitution": 0.30,
+        "absorption": 0.0,  # closed cells: surface film only
+        "deformable": {"youngs_modulus": 1.0e6, "poissons_ratio": 0.10, "tet_resolution": 18},
+        "subdivisions": 4,
+        "minerals": [
+            ("white EPS", 0.60, (0.95, 0.95, 0.93)),
+            ("green recycled EPS", 0.25, (0.45, 0.70, 0.45)),
+            ("pink antistatic EPS", 0.15, (0.92, 0.65, 0.72)),
+        ],
+    },
+    "starch_peanuts": {
+        "category": "Packaging",
+        "label": "Starch packing peanuts",
+        "kind": "tube",
+        "curves": {"straight": 0.6, "C": 0.4},
+        "curve_amplitude": (0.0, 0.15),
+        "aspect": (0.40, 0.55),
+        "phi_mean": -4.2,  # ~18 mm nominal, ~30 mm long
+        "phi_std": 0.15,
+        "elongation_beta": (1.0, 1.0),
+        "flatness_beta": (18.0, 2.0),
+        "lumpiness": (0.03, 0.08),  # puffed, irregular
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.03,
+        "density": 18.0,  # extruded starch foam
+        "friction": 0.55,
+        "restitution": 0.25,
+        "absorption": 0.0,
+        "moisture": False,  # dissolves in water: not modelled
+        "moisture_note": "dissolves in water",
+        "deformable": {"youngs_modulus": 0.8e6, "poissons_ratio": 0.15, "tet_resolution": 18},
+        "subdivisions": 4,
+        "minerals": [
+            ("off-white starch", 0.80, (0.92, 0.88, 0.76)),
+            ("pale yellow starch", 0.20, (0.93, 0.85, 0.60)),
         ],
     },
     # ----------------------------------------------------------------- Space

@@ -326,7 +326,8 @@ def moisture_gallery(folders: list[Path], out: Path, grains: int = 5, tile: floa
 
     for r, folder in enumerate(folders):
         summary, data = _load(folder)
-        has_moisture = PRESETS.get(summary["preset"], {}).get("moisture", True)
+        preset = PRESETS.get(summary["preset"], {})
+        has_moisture = preset.get("moisture", True)
         y0 = head_h + r * (tile + row_gap)
         fig.text(
             0.12 / width,
@@ -351,7 +352,7 @@ def moisture_gallery(folders: list[Path], out: Path, grains: int = 5, tile: floa
                     fig.text(
                         (x0 + 0.1) / width,
                         1 - (y0 + tile / 2) / height,
-                        "no moisture (no liquid water)",
+                        f"no moisture ({preset.get('moisture_note', 'no liquid water')})",
                         ha="left",
                         va="center",
                         fontsize=8.5,

@@ -54,6 +54,7 @@ class Scene:
     spacing: float
     side: int
     moisture_weights: dict | None = field(default=None)
+    deformable: dict | None = field(default=None)
 
 
 def _beta_mean(ab):
@@ -122,6 +123,10 @@ def sample_params(rng, preset, var: Variations):
         "pit_size": preset.get("pit_size", (0.2, 0.4)),
         "subdivisions": preset["subdivisions"],
         "sphere": preset.get("sphere", False),
+        # tube grains: curve drawn inside make_grain; mean amplitude when shape is off
+        "curves": preset.get("curves"),
+        "curve_amplitude": preset.get("curve_amplitude", (0.0, 0.0)),
+        "vary": var.shape,
     }
 
 
@@ -160,8 +165,14 @@ def generate_scene(
     seed: int = 1,
     variations: Variations | None = None,
     moisture_weights: str = moisture.DEFAULT_WEIGHTS,
+    deformable: bool = True,
 ) -> Scene:
-    """Build the grain library and the mixed scene in memory."""
+    """Build the grain library and the mixed scene in memory.
+
+    Presets with a "deformable" entry (packing peanuts) also get a tetrahedral
+    simulation mesh per grain and are exported as deformable bodies, unless
+    deformable=False (then they are exported as rigid bodies like the others).
+    """
     if preset_key not in PRESETS:
         raise KeyError(f"unknown preset '{preset_key}'")
     preset = PRESETS[preset_key]
@@ -169,6 +180,7 @@ def generate_scene(
     use_moisture = var.moisture and moisture_applies(preset_key)
     weights = moisture.parse_weights(moisture_weights) if use_moisture else None
     states = list(moisture.STATES) if use_moisture else None
+    soft = preset.get("deformable") if deformable else None
 
     rng = np.random.default_rng(seed)
     prototypes = []
@@ -176,7 +188,12 @@ def generate_scene(
         params = sample_params(rng, preset, var)
         # each grain's geometry uses its own stream: the number of chips or pits
         # of one grain never shifts the draws of the next ones
-        verts, faces = make_grain(np.random.default_rng([seed, 2, i]), params)
+        tet_points = tets = None
+        if soft:
+            params.update(tets=True, tet_resolution=soft.get("tet_resolution", 18))
+            verts, faces, tet_points, tets = make_grain(np.random.default_rng([seed, 2, i]), params)
+        else:
+            verts, faces = make_grain(np.random.default_rng([seed, 2, i]), params)
         metrics = measure(verts, faces)
         mineral, color = sample_color(rng, preset, var)
         dry = metrics["volume_m3"] * preset["density"]
@@ -189,6 +206,8 @@ def generate_scene(
             "color": color,
             "mass": dry,
         }
+        if soft:
+            proto["tet_points"], proto["tets"] = tet_points, tets
         if use_moisture:
             proto["moisture"] = {}
             for s in states:
@@ -230,7 +249,18 @@ def generate_scene(
 
     effective = Variations(**{**asdict(var), "moisture": bool(use_moisture)})
     return Scene(
-        preset_key, preset, seed, effective, prototypes, instances, states, order, spacing, side, weights
+        preset_key,
+        preset,
+        seed,
+        effective,
+        prototypes,
+        instances,
+        states,
+        order,
+        spacing,
+        side,
+        weights,
+        soft,
     )
 
 
@@ -257,7 +287,10 @@ def summarize(scene: Scene) -> dict:
         "mean_angularity_deg": float(m["angularity_deg"].mean()),
         "min_convexity": float(m["convexity"].min()),
         "total_dry_mass_g": float(dry_total * 1000),
+        "deformable": bool(scene.deformable),
     }
+    if scene.deformable:
+        summary["tetrahedra_per_grain_median"] = int(np.median([len(p["tets"]) for p in protos]))
     if scene.states:
         wet_total = sum(protos[i["proto"]]["moisture"][i["state"]]["mass"] for i in scene.instances)
         summary["moisture"] = {
@@ -287,6 +320,7 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
         scene.instances,
         ground_size=4 * scene.side * scene.spacing,
         states=states,
+        deformable=scene.deformable,
     )
 
     keys = list(protos[0]["metrics"].keys())

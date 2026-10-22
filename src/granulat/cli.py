@@ -32,7 +32,10 @@ def _cmd_list(_args) -> int:
         print(c)
         for k, p in PRESETS.items():
             if p["category"] == c:
-                note = "" if p.get("moisture", True) else "  (no moisture)"
+                notes = [] if p.get("moisture", True) else ["no moisture"]
+                if p.get("deformable"):
+                    notes.append("deformable")
+                note = f"  ({', '.join(notes)})" if notes else ""
                 print(f"  {k:<18} {p['label']:<30} ~{2.0 ** (-p['phi_mean']):.3g} mm{note}")
     return 0
 
@@ -41,7 +44,9 @@ def _cmd_generate(args) -> int:
     var = Variations(**{k: getattr(args, k) for k in VARIATION_HELP}, moisture=args.moisture)
     if args.moisture and not moisture_applies(args.preset):
         print(f"moisture ignored: not applicable to '{PRESETS[args.preset]['label']}'")
-    scene = generate_scene(args.preset, args.shapes, args.copies, args.seed, var, args.moisture_weights)
+    scene = generate_scene(
+        args.preset, args.shapes, args.copies, args.seed, var, args.moisture_weights, args.deformable
+    )
     out = write_outputs(scene, args.out)
     summary = summarize(scene)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
@@ -102,6 +107,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--moisture-weights",
         default=moisture.DEFAULT_WEIGHTS,
         help="share of grains per state: dry,damp,wet,saturated",
+    )
+    g.add_argument(
+        "--deformable",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="deformable presets (packing peanuts): TetMesh + OmniPhysics deformable schema "
+        "(off: rigid bodies)",
     )
     g.set_defaults(func=_cmd_generate)
 

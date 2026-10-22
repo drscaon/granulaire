@@ -80,3 +80,58 @@ def test_usd_without_moisture_has_dry_mass(tmp_path):
     assert UsdPhysics.MassAPI(prim).GetMassAttr().Get() == pytest.approx(expected, rel=1e-6)
     summary = json.loads((folder / "summary.json").read_text())
     assert summary["grains"] == 12 and summary["preset"] == "crushed_gravel"
+
+
+def _api_schemas(prim):
+    """Authored API schemas, including ones not registered in this USD build
+    (the OmniPhysics plugin is not part of usd-core)."""
+    op = prim.GetMetadata("apiSchemas")
+    return op.ApplyOperations([]) if op else []
+
+
+def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
+    from pxr import UsdGeom
+
+    scene = generate_scene(
+        "packing_peanuts", shapes=3, copies=1, seed=2, variations=Variations(moisture=True)
+    )
+    folder = write_outputs(scene, tmp_path)
+    stage = Usd.Stage.Open(str(folder / "granulat_packing_peanuts.usdc"))
+    for prim, inst in zip(stage.GetPrimAtPath("/World/Grains").GetChildren(), scene.instances, strict=True):
+        assert "OmniPhysicsDeformableBodyAPI" in _api_schemas(prim)
+        assert not prim.HasAPI(UsdPhysics.RigidBodyAPI)
+        expected = scene.prototypes[inst["proto"]]["moisture"][inst["state"]]["mass"]
+        assert prim.GetAttribute("omniphysics:mass").Get() == pytest.approx(expected, rel=1e-6)
+
+        sim = prim.GetChild("sim")
+        assert sim.IsA(UsdGeom.TetMesh)
+        assert "OmniPhysicsVolumeDeformableSimAPI" in _api_schemas(sim)
+        assert sim.HasAPI(UsdPhysics.CollisionAPI)
+        tets = np.array(sim.GetAttribute("tetVertexIndices").Get())
+        rest = np.array(sim.GetAttribute("omniphysics:restTetVtxIndices").Get())
+        assert len(tets) > 100 and np.array_equal(tets, rest)
+        assert "OmniPhysicsDeformablePoseAPI:custom" in _api_schemas(prim.GetChild("geom"))
+
+        physics = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial("physics")[0].GetPrim()
+        assert "OmniPhysicsDeformableMaterialAPI" in _api_schemas(physics)
+        assert physics.GetAttribute("omniphysics:youngsModulus").Get() > 0
+
+
+def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
+    scene = generate_scene("packing_peanuts", shapes=2, copies=1, deformable=False)
+    folder = write_outputs(scene, tmp_path)
+    stage = Usd.Stage.Open(str(folder / "granulat_packing_peanuts.usdc"))
+    prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
+    assert prim.HasAPI(UsdPhysics.RigidBodyAPI)
+    assert not prim.GetChild("sim")
+
+
+def test_tetrahedra_fill_the_grain():
+    scene = generate_scene("starch_peanuts", shapes=2, copies=1)
+    for p in scene.prototypes:
+        pts = p["tet_points"][p["tets"]]
+        vol = np.einsum(
+            "ij,ij->i", np.cross(pts[:, 1] - pts[:, 0], pts[:, 2] - pts[:, 0]), pts[:, 3] - pts[:, 0]
+        )
+        assert (vol > 0).all()
+        assert vol.sum() / 6 == pytest.approx(p["metrics"]["volume_m3"], rel=0.15)
