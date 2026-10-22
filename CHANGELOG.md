@@ -14,6 +14,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
   GitHub release, marked as a pre-release for alpha, beta and rc versions.
 - Dependabot for GitHub Actions and Python dependencies.
 - CI, Python and license badges in the README.
+- Branch model: `main` for releases, `develop` for integration; the Main guard
+  workflow only accepts pull requests into `main` from `develop` or `hotfix/*`,
+  and a versioned `pre-push` hook (`.githooks/`) refuses direct pushes to
+  `main`. Dependabot targets `develop`.
 
 ## [0.2.0b1] - 2026-10-22 (beta)
 

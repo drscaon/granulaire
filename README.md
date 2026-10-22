@@ -313,15 +313,43 @@ ruff format .     # format
   `chore(release): X.Y.Z`, then tag `vX.Y.Z` (annotated). Pre-releases use
   PEP 440 suffixes (`0.2.0b1` for a beta, tag `v0.2.0b1`).
 
+### Branches
+
+| Branch | Role |
+|---|---|
+| `main` | released code only. Each release is a merge from `develop`, then a tag `vX.Y.Z`. Never pushed to directly. |
+| `develop` | integration branch: new work lands here. |
+| `feature/<name>`, `fix/<name>` | short-lived branches from `develop`, merged back into `develop` by pull request. |
+| `hotfix/<name>` | urgent fix from `main`, merged into `main` and then back into `develop`. |
+
+Release flow: on `develop`, bump the version and the changelog
+(`chore(release): X.Y.Z`), open a pull request `develop` → `main`, merge it,
+then tag `vX.Y.Z` on `main` (or create the release on the GitHub web page with
+that new tag); the release workflow attaches the packages.
+
+Guards on `main`:
+
+- the **Main guard** workflow fails any pull request into `main` that does not
+  come from `develop` or `hotfix/*`;
+- a versioned `pre-push` hook refuses direct pushes to `main`. Enable it once
+  per clone with `git config core.hooksPath .githooks`
+  (emergency override: `ALLOW_MAIN_PUSH=1 git push`).
+
+On a private repository, GitHub enforces branch protection rules only with
+GitHub Pro (or on a public repository). With either, add a rule on `main`:
+require a pull request, require the `Source branch` and CI checks, block
+force pushes and deletion.
+
 ### Continuous integration
 
-GitHub Actions runs three workflows (`.github/workflows/`):
+GitHub Actions runs these workflows (`.github/workflows/`), plus the Main
+guard described above:
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `ci.yml` | every push to `main` or `develop`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
 | `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
-| Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
+| Dependabot | monthly | pull requests into `develop` to update the GitHub Actions and the Python dependencies. |
 
 Ruff is pinned in CI so that a new ruff release cannot fail the build on
 unchanged code; update the pin and run `ruff format .` together.

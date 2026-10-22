@@ -1,0 +1,25 @@
+name: Main guard
+
+# Pull requests into main must come from develop or from a hotfix/* branch.
+# With branch protection enabled (GitHub Pro or a public repository), mark the
+# "Source branch" check as required on main.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  source-branch:
+    name: Source branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the source branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            develop|hotfix/*) echo "OK: $HEAD_REF -> main" ;;
+            *) echo "::error::pull requests into main must come from develop or hotfix/*, not $HEAD_REF"; exit 1 ;;
+          esac
