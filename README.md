@@ -104,7 +104,7 @@ the same.
 |---|---|
 | Sand | `beach_sand`, `dune_sand`, `volcanic_sand` |
 | Gravel | `rounded_gravel`, `crushed_gravel`, `marble_chips`, `pozzolana` |
-| Pebbles | `river_pebbles`, `beach_pebbles` |
+| Pebbles | `river_pebbles` (rounded, equant, earthy mixed minerals), `beach_pebbles` (flat discs and ovals, polished basalt and marble) |
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
 | Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
@@ -152,7 +152,8 @@ dominates for porous stone (pozzolana) and for anything that soaks
 | Beach sand | +3.6 % | +14 % | +24 % |
 | Pozzolana (porous) | +6.2 % | +17 % | +22 % |
 | Crushed gravel | +0.5 % | +1.5 % | +2.2 % |
-| Beach pebbles | +0.2 % | +0.5 % | +0.7 % |
+| River pebbles | +0.2 % | +0.6 % | +0.8 % |
+| Beach pebbles (dense basalt, marble) | +0.1 % | +0.3 % | +0.5 % |
 | Plastic pellets | +1.0 % | +4.0 % | +7.0 % |
 | Wheat | +9.6 % | +26 % | +34 % |
 | Soybeans | +12 % | +34 % | +43 % |
@@ -287,7 +288,7 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 | **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
 | **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
 | **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
-| **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (40 mm · ~110 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (47 mm · ~240 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
+| **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (38 mm, 18 mm thick · ~140 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (46 mm · ~230 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
 
 For elongated or flat grains (rice, maize, beans, pellets), the **thickness** is what
 matters for tunnelling, not the nominal size. Packing peanuts are large but
