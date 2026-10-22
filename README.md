@@ -7,6 +7,12 @@
 
 <p align="center"><strong>Realistic granular assets generator for physical AI.</strong></p>
 
+<p align="center">
+  <a href="https://github.com/drscaon/granulaire/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drscaon/granulaire/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776AB">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
 Granulaire generates sand, gravel, pebbles, seeds, pellets and packing peanuts
 with realistic, measured shapes, sizes, masses and moisture, and exports them
 to **OpenUSD**. It is built for **physical AI**: robots trained and tested in
@@ -72,8 +78,7 @@ The README gallery comes from generating every preset with `--moisture`, then
 ```python
 from granulaire import Variations, generate_scene, write_outputs
 
-scene = generate_scene("beach_sand", shapes=100, copies=5, seed=1,
-                       variations=Variations(moisture=True))
+scene = generate_scene("beach_sand", shapes=100, copies=5, seed=1, variations=Variations(moisture=True))
 write_outputs(scene, "output")
 ```
 
@@ -307,6 +312,19 @@ ruff format .     # format
   entries of `CHANGELOG.md` under the new version with its date, commit as
   `chore(release): X.Y.Z`, then tag `vX.Y.Z` (annotated). Pre-releases use
   PEP 440 suffixes (`0.2.0b1` for a beta, tag `v0.2.0b1`).
+
+### Continuous integration
+
+GitHub Actions runs three workflows (`.github/workflows/`):
+
+| Workflow | When | What |
+|---|---|---|
+| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
+| Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
+
+Ruff is pinned in CI so that a new ruff release cannot fail the build on
+unchanged code; update the pin and run `ruff format .` together.
 
 ## License
 

@@ -6,6 +6,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Continuous integration with GitHub Actions: lint, tests on Python 3.10–3.13
+  (Linux) and on macOS and Windows, command-line smoke test, package build and
+  check.
+- Release workflow: a `v*` tag builds the packages and publishes them on the
+  GitHub release, marked as a pre-release for alpha, beta and rc versions.
+- Dependabot for GitHub Actions and Python dependencies.
+- CI, Python and license badges in the README.
+
 ## [0.2.0b1] - 2026-10-22 (beta)
 
 First beta, under the new name Granulaire.
