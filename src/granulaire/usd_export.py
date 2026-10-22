@@ -7,10 +7,10 @@ Scene layout (units: metres, kilograms, Z up):
   /Looks/Mat_000[_<state>]     UsdPreviewSurface materials (prototype x state)
   /Looks/Phys[_<state>]        physics materials (friction, restitution)
   /Prototypes        (class)   N shapes, not rendered directly
-    /Grain_000                 RigidBody + Mass + granulat:* attributes
+    /Grain_000                 RigidBody + Mass + granulaire:* attributes
       variantSet "moisture"    (when enabled) dry | damp | wet | saturated:
-                               mass, granulat:waterMass,
-                               granulat:capillaryCohesion, bound materials
+                               mass, granulaire:waterMass,
+                               granulaire:capillaryCohesion, bound materials
       /geom                    Mesh + Collision (convex hull)
   /Grains
     /g_0000 ...                internal reference to a prototype, with its own
@@ -133,7 +133,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
 
     world = UsdGeom.Xform.Define(stage, "/World")
     stage.SetDefaultPrim(world.GetPrim())
-    world.GetPrim().SetCustomDataByKey("granulat:preset", preset["label"])
+    world.GetPrim().SetCustomDataByKey("granulaire:preset", preset["label"])
     UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
     UsdGeom.Scope.Define(stage, "/World/Looks")
 
@@ -182,8 +182,8 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
             ("convexity", m["convexity"]),
             ("dryMass", proto["mass"]),
         ]:
-            prim.CreateAttribute(f"granulat:{key}", Sdf.ValueTypeNames.Float).Set(float(value))
-        prim.CreateAttribute("granulat:mineral", Sdf.ValueTypeNames.String).Set(proto["mineral"])
+            prim.CreateAttribute(f"granulaire:{key}", Sdf.ValueTypeNames.Float).Set(float(value))
+        prim.CreateAttribute("granulaire:mineral", Sdf.ValueTypeNames.String).Set(proto["mineral"])
 
         verts, faces = proto["verts"], proto["faces"]
         normals = trimesh.Trimesh(verts, faces, process=False).vertex_normals
@@ -242,11 +242,11 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
             info = proto["moisture"][s]
             with vset.GetVariantEditContext():
                 mass_attr.Set(float(info["mass"]))
-                prim.CreateAttribute("granulat:moisture", Sdf.ValueTypeNames.Token).Set(s)
-                prim.CreateAttribute("granulat:waterMass", Sdf.ValueTypeNames.Float).Set(
+                prim.CreateAttribute("granulaire:moisture", Sdf.ValueTypeNames.Token).Set(s)
+                prim.CreateAttribute("granulaire:waterMass", Sdf.ValueTypeNames.Float).Set(
                     float(info["water_mass"])
                 )
-                prim.CreateAttribute("granulat:capillaryCohesion", Sdf.ValueTypeNames.Float).Set(
+                prim.CreateAttribute("granulaire:capillaryCohesion", Sdf.ValueTypeNames.Float).Set(
                     float(info["cohesion"])
                 )
                 mesh.CreateDisplayColorAttr([Gf.Vec3f(*wet_color(proto["color"], s))])
@@ -262,7 +262,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
         xf.AddTranslateOp().Set(Gf.Vec3d(*inst["position"]))
         w, x, y, z = inst["orient"]
         xf.AddOrientOp().Set(Gf.Quatf(float(w), float(x), float(y), float(z)))
-        prim.CreateAttribute("granulat:prototype", Sdf.ValueTypeNames.Int).Set(int(inst["proto"]))
+        prim.CreateAttribute("granulaire:prototype", Sdf.ValueTypeNames.Int).Set(int(inst["proto"]))
         if states:
             prim.GetVariantSets().GetVariantSet("moisture").SetVariantSelection(inst["state"])
 

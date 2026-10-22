@@ -25,7 +25,7 @@ What a state changes:
 3. Contact - friction and restitution through one UsdPhysics material per
    state. Capillary cohesion (liquid bridges between grains) has no standard
    UsdPhysics schema: it is written to the custom attribute
-   granulat:capillaryCohesion (Pa), for a solver or script that can read it.
+   granulaire:capillaryCohesion (Pa), for a solver or script that can read it.
    It peaks in the damp state, is zero when dry or saturated, and decreases
    with grain size.
 

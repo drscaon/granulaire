@@ -1,7 +1,7 @@
 import pytest
 
-from granulat import moisture
-from granulat.moisture import STATES, cohesion, parse_weights, water_mass
+from granulaire import moisture
+from granulaire.moisture import STATES, cohesion, parse_weights, water_mass
 
 # a 0.35 mm quartz sand grain and an 8 mm gravel grain (sphere approximation)
 SAND = {"dry_mass": 2650 * 3.1416 * 0.35e-3**3 / 6, "area": 3.1416 * 0.35e-3**2}

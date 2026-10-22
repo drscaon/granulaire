@@ -21,13 +21,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
   plus crease, crown dent, kidney bend and axial end cuts.
 - Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge
   taper and pits, so material families look clearly different.
-- `granulat render-gallery`: several grains per preset shown in every
+- `granulaire render-gallery`: several grains per preset shown in every
   moisture state; README illustrated with the gallery of all presets.
 - README section on physics limits by grain size: which presets are unstable
   in current rigid-body engines, recommended settings, and why perception use
   is unaffected.
 
 ### Changed
+- **Project renamed from `granulat` to `granulaire`**: Python package
+  (`import granulaire`), command line (`granulaire`), PyPI name, output file
+  names (`granulaire_<preset>.usdc`) and the USD attribute namespace
+  (`granulaire:*`, was `granulat:*`). Files exported by 0.1.0 keep the old
+  attribute names.
 - Grains are meshed from implicit volumes with marching cubes (new
   dependency: scikit-image). Triangles stay well shaped on flat fracture
   faces; meshes are watertight.

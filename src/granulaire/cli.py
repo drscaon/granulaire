@@ -1,11 +1,11 @@
 """Command-line interface.
 
-granulat list
-granulat generate --preset beach_sand [--shapes 100] [--copies 5] [--seed 1]
+granulaire list
+granulaire generate --preset beach_sand [--shapes 100] [--copies 5] [--seed 1]
                   [--no-size] [--no-shape] [--no-roundness] [--no-mineralogy]
                   [--no-orientation] [--moisture] [--moisture-weights 40,30,20,10]
-granulat render output/beach_sand output/crushed_gravel
-granulat render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
+granulaire render output/beach_sand output/crushed_gravel
+granulaire render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
 """
 
 from __future__ import annotations
@@ -83,7 +83,9 @@ def _cmd_render_gallery(args) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="granulat", description="Procedural granular materials for simulation.")
+    ap = argparse.ArgumentParser(
+        prog="granulaire", description="Realistic granular materials for physical AI, exported to OpenUSD."
+    )
     ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = ap.add_subparsers(dest="command", required=True)
 

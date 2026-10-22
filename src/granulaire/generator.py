@@ -3,7 +3,7 @@
 The library API is separate from the command line so it can be used from
 Python and tested directly:
 
-    from granulat import Variations, generate_scene, write_outputs
+    from granulaire import Variations, generate_scene, write_outputs
     scene = generate_scene("beach_sand", shapes=100, copies=5, seed=1,
                            variations=Variations(moisture=True))
     write_outputs(scene, "output")
@@ -312,7 +312,7 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
     out.mkdir(parents=True, exist_ok=True)
     protos, states = scene.prototypes, scene.states
 
-    usd_path = out / f"granulat_{scene.preset_key}.usdc"
+    usd_path = out / f"granulaire_{scene.preset_key}.usdc"
     export_stage(
         usd_path,
         scene.preset,

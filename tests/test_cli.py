@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from granulat import __version__
-from granulat.cli import main
+from granulaire import __version__
+from granulaire.cli import main
 
 
 def test_list(capsys):

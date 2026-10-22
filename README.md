@@ -1,4 +1,4 @@
-# Granulat
+# Granulaire
 
 Procedural granular materials for simulation: realistic grains instead of
 perfect spheres, exported to **OpenUSD** with physical properties.
@@ -9,7 +9,7 @@ Everything runs on CPU.
 *Five different grains of each of the 23 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
-Regenerate with `granulat render-gallery` (see Usage).*
+Regenerate with `granulaire render-gallery` (see Usage).*
 
 ## What it does
 
@@ -42,23 +42,23 @@ Requires Python 3.10+.
 ## Usage
 
 ```bash
-granulat list
-granulat generate --preset beach_sand --shapes 100 --copies 5 --seed 1
-granulat generate --preset beach_pebbles --moisture --moisture-weights 0,20,50,30
-granulat generate --preset rounded_gravel --no-size --no-orientation
-granulat render output/beach_sand output/crushed_gravel
-granulat render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
-granulat render-gallery output/beach_sand output/crushed_gravel --grains 5
+granulaire list
+granulaire generate --preset beach_sand --shapes 100 --copies 5 --seed 1
+granulaire generate --preset beach_pebbles --moisture --moisture-weights 0,20,50,30
+granulaire generate --preset rounded_gravel --no-size --no-orientation
+granulaire render output/beach_sand output/crushed_gravel
+granulaire render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
+granulaire render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
 
 The README gallery comes from generating every preset with `--moisture`, then
-`granulat render-gallery` on all 23 output folders in category order, with
+`granulaire render-gallery` on all 23 output folders in category order, with
 `--output docs/images/moisture_gallery.png`.
 
-`python -m granulat ...` works too. From Python:
+`python -m granulaire ...` works too. From Python:
 
 ```python
-from granulat import Variations, generate_scene, write_outputs
+from granulaire import Variations, generate_scene, write_outputs
 
 scene = generate_scene("beach_sand", shapes=100, copies=5, seed=1,
                        variations=Variations(moisture=True))
@@ -102,10 +102,10 @@ Every prototype carries a `moisture` variant set (`dry`, `damp`, `wet`,
 
 - **mass**: a wetter grain is **heavier**. Each state stores its own mass
   (dry mass + water) in `physics:mass`, plus the water alone in
-  `granulat:waterMass`; switching the variant switches the mass;
+  `granulaire:waterMass`; switching the variant switches the mass;
 - **appearance**: darker colour, lower roughness, clearcoat (UsdPreviewSurface);
 - **contact**: friction and restitution (one UsdPhysics material per state),
-  plus capillary cohesion in the custom attribute `granulat:capillaryCohesion`,
+  plus capillary cohesion in the custom attribute `granulaire:capillaryCohesion`,
   since UsdPhysics has no standard schema for it.
 
 The water comes from two sources: a **surface film**, which weighs a lot on
@@ -182,7 +182,7 @@ built on the core `UsdGeom.TetMesh`:
   (`apiSchemas` metadata).
 - NVIDIA's schema is still evolving (it replaced an earlier PhysX deformable
   API); if a newer Omniverse release renames attributes, re-export with an
-  updated Granulat. If OpenUSD standardises deformables, the export will move
+  updated Granulaire. If OpenUSD standardises deformables, the export will move
   to that schema.
 - `--no-deformable` exports the same presets as rigid bodies.
 - Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1) are indicative.
@@ -191,12 +191,12 @@ built on the core `UsdGeom.TetMesh`:
 
 | File | Content |
 |---|---|
-| `granulat_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
+| `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
 | `prototype_metrics.csv` | measured descriptors, mass (per moisture state), parameters |
 | `instances.csv` | grain → shape, position, moisture state |
 | `summary.json` | global statistics (d50, mean sphericity, masses, water) |
 | `prototypes.npz` | meshes, used by the renderer |
-| `shape_sheet.png`, `mix_preview.png` | previews (`granulat render`) |
+| `shape_sheet.png`, `mix_preview.png` | previews (`granulaire render`) |
 
 ## Method in brief
 
@@ -289,7 +289,7 @@ ruff format .     # format
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `build:`, `chore:`).
 - Versions follow [Semantic Versioning](https://semver.org/). The version
-  lives in one place, `pyproject.toml`; `granulat.__version__` reads it from
+  lives in one place, `pyproject.toml`; `granulaire.__version__` reads it from
   the installed package metadata.
 - To release: update `version` in `pyproject.toml`, move the `Unreleased`
   entries of `CHANGELOG.md` under the new version with its date, commit as

@@ -13,7 +13,7 @@ venv/
 .coverage
 htmlcov/
 
-# Generated outputs (regenerate with `granulat generate`)
+# Generated outputs (regenerate with `granulaire generate`)
 output/
 *.usdc
 *.usda

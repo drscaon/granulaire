@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import trimesh
 
-from granulat.measure import measure
-from granulat.shape import make_grain
+from granulaire.measure import measure
+from granulaire.shape import make_grain
 
 BASE = {
     "elongation": 0.7,

@@ -1,9 +1,9 @@
-"""Granulat: procedural granular materials for simulation, exported to OpenUSD."""
+"""Granulaire: realistic granular materials for physical AI, exported to OpenUSD."""
 
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("granulat")
+    __version__ = version("granulaire")
 except PackageNotFoundError:  # running from a source tree without installation
     __version__ = "0.0.0+unknown"
 

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from pxr import Usd, UsdPhysics, UsdShade
 
-from granulat import Variations, generate_scene, write_outputs
+from granulaire import Variations, generate_scene, write_outputs
 
 SMALL = {"shapes": 6, "copies": 2, "seed": 7}
 
@@ -50,7 +50,7 @@ def test_unknown_preset():
 def test_usd_moisture_variants_are_consistent(tmp_path):
     scene = generate_scene("beach_pebbles", **SMALL, variations=Variations(moisture=True))
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / "granulat_beach_pebbles.usdc"))
+    stage = Usd.Stage.Open(str(folder / "granulaire_beach_pebbles.usdc"))
     grains = stage.GetPrimAtPath("/World/Grains").GetChildren()
     assert len(grains) == 12
     for prim, inst in zip(grains, scene.instances, strict=True):
@@ -73,7 +73,7 @@ def test_usd_moisture_variants_are_consistent(tmp_path):
 def test_usd_without_moisture_has_dry_mass(tmp_path):
     scene = generate_scene("crushed_gravel", **SMALL)
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / "granulat_crushed_gravel.usdc"))
+    stage = Usd.Stage.Open(str(folder / "granulaire_crushed_gravel.usdc"))
     prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
     assert not prim.GetVariantSets().HasVariantSet("moisture")
     expected = scene.prototypes[scene.instances[0]["proto"]]["mass"]
@@ -94,7 +94,7 @@ def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
 
     scene = generate_scene("packing_peanuts", shapes=3, copies=1, seed=2)
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / "granulat_packing_peanuts.usdc"))
+    stage = Usd.Stage.Open(str(folder / "granulaire_packing_peanuts.usdc"))
     for prim, inst in zip(stage.GetPrimAtPath("/World/Grains").GetChildren(), scene.instances, strict=True):
         assert "OmniPhysicsDeformableBodyAPI" in _api_schemas(prim)
         assert not prim.HasAPI(UsdPhysics.RigidBodyAPI)
@@ -118,7 +118,7 @@ def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
 def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
     scene = generate_scene("packing_peanuts", shapes=2, copies=1, deformable=False)
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / "granulat_packing_peanuts.usdc"))
+    stage = Usd.Stage.Open(str(folder / "granulaire_packing_peanuts.usdc"))
     prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
     assert prim.HasAPI(UsdPhysics.RigidBodyAPI)
     assert not prim.GetChild("sim")
@@ -141,6 +141,6 @@ def test_packing_peanuts_have_no_moisture_states(key, tmp_path):
     scene = generate_scene(key, shapes=2, copies=1, variations=Variations(moisture=True))
     assert scene.states is None and scene.variations.moisture is False
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / f"granulat_{key}.usdc"))
+    stage = Usd.Stage.Open(str(folder / f"granulaire_{key}.usdc"))
     prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
     assert not prim.GetVariantSets().HasVariantSet("moisture")

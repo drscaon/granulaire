@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from granulat.presets import CATEGORIES, PRESETS
+from granulaire.presets import CATEGORIES, PRESETS
 
 REQUIRED = {
     "category",
@@ -43,7 +43,7 @@ def test_every_category_is_used():
 
 
 def test_material_families_have_distinct_shapes():
-    from granulat import generate_scene
+    from granulaire import generate_scene
 
     def mean_convexity(key):
         scene = generate_scene(key, shapes=8, copies=1, seed=3)

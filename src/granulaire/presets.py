@@ -16,13 +16,13 @@ rather than a single shape:
   pit_size;
 - minerals: colours and proportions (rendering), density (mass);
 - absorption: water absorbed by the grain at saturation, as a fraction of its
-  dry mass (internal porosity; see granulat/moisture.py);
+  dry mass (internal porosity; see granulaire/moisture.py);
 - moisture: False where a wet state makes no sense: no liquid water
   (regoliths) or water runs off (polystyrene peanuts); moisture_note says why;
 - kind: base body, "rock" (default, random polyhedron), "superellipsoid"
   (kernels and seeds, with `exponent`) or "cylinder" (pellets, with
   `exponent` and `aspect` = radius / half-length range); crease, dent and
-  chip_axis="x" shape kernels and pellet ends (see granulat/shape.py);
+  chip_axis="x" shape kernels and pellet ends (see granulaire/shape.py);
 - kind "tube" (packing peanuts): a rounded tube along an S, C or straight
   curve (`curves` weights, `curve_amplitude`), radius `aspect`;
 - deformable: Young's modulus, Poisson's ratio and simulation-mesh

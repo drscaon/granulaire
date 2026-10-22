@@ -4,7 +4,7 @@ Minimal software rendering (no GPU): orthographic projection, Lambert shading
 plus an optional Blinn-Phong highlight, back-face culling and depth sorting.
 Grains are (nearly) convex, so this is enough for a correct picture.
 
-Requires the optional dependency: pip install "granulat[render]".
+Requires the optional dependency: pip install "granulaire[render]".
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ def _plt():
         import matplotlib.pyplot as plt
         from matplotlib.collections import PolyCollection
     except ImportError as exc:  # pragma: no cover - depends on the environment
-        raise SystemExit('rendering needs matplotlib: pip install "granulat[render]"') from exc
+        raise SystemExit('rendering needs matplotlib: pip install "granulaire[render]"') from exc
     return plt, PolyCollection
 
 
