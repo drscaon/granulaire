@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-<p align="center"><strong>Realistic granular assets generator for physical AI.</strong></p>
+<p align="center"><strong>Realistic granular assets generator for Physical AI.</strong></p>
 
 <p align="center">
   <a href="https://github.com/drscaon/granulaire/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drscaon/granulaire/actions/workflows/ci.yml/badge.svg"></a>
@@ -15,7 +15,7 @@
 
 Granulaire generates sand, gravel, pebbles, seeds, pellets and packing peanuts
 with realistic, measured shapes, sizes, masses and moisture, and exports them
-to **OpenUSD**. It is built for **physical AI**: robots trained and tested in
+to **OpenUSD**. It is built for **Physical AI**: robots trained and tested in
 simulation (reinforcement learning, virtual test campaigns, sim-to-real) need
 ground that looks and behaves like the real thing, not perfect spheres, and
 perception models need synthetic images with exact ground truth. Everything
