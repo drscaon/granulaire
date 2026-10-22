@@ -294,3 +294,7 @@ ruff format .     # format
 - To release: update `version` in `pyproject.toml`, move the `Unreleased`
   entries of `CHANGELOG.md` under the new version with its date, commit as
   `chore(release): X.Y.Z`, then tag `vX.Y.Z` (annotated).
+
+## License
+
+[MIT](LICENSE) © 2026 Daniel Régis Sarmento Caon

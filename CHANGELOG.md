@@ -7,6 +7,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- MIT license.
 - Agricultural presets: `wheat`, `maize`, `rice`, `beans`, `soybean`; pellet presets:
   `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
 - Deformable packing peanuts: `packing_peanuts` (EPS), new Packaging
