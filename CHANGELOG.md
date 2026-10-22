@@ -6,6 +6,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0b1] - 2026-10-22 (beta)
+
+First public beta, under the new name Granulaire.
+
 ### Added
 - MIT license.
 - "Granulaire" logo (light and dark versions, "ai" highlighted, a shaded

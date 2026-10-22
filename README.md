@@ -305,7 +305,8 @@ ruff format .     # format
   the installed package metadata.
 - To release: update `version` in `pyproject.toml`, move the `Unreleased`
   entries of `CHANGELOG.md` under the new version with its date, commit as
-  `chore(release): X.Y.Z`, then tag `vX.Y.Z` (annotated).
+  `chore(release): X.Y.Z`, then tag `vX.Y.Z` (annotated). Pre-releases use
+  PEP 440 suffixes (`0.2.0b1` for a beta, tag `v0.2.0b1`).
 
 ## License
 
