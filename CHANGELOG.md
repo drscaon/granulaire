@@ -14,6 +14,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   GitHub release, marked as a pre-release for alpha, beta and rc versions.
 - Dependabot for GitHub Actions and Python dependencies.
 - CI, Python and license badges in the README.
+- GitHub Flow: changes reach `main` only through pull requests from
+  short-lived branches; a versioned `pre-push` hook (`.githooks/`) refuses
+  direct pushes to `main`.
 
 ## [0.2.0b1] - 2026-10-22 (beta)
 
