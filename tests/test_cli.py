@@ -10,6 +10,7 @@ def test_list(capsys):
     assert main(["list"]) == 0
     out = capsys.readouterr().out
     assert "beach_sand" in out and "Reference" in out
+    assert "Agricultural" in out and "wood_pellets" in out
 
 
 def test_version(capsys):

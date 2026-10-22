@@ -18,6 +18,10 @@ rather than a single shape:
 - absorption: water absorbed by the grain at saturation, as a fraction of its
   dry mass (internal porosity; see granulat/moisture.py);
 - moisture: False for a material where water makes no sense (regoliths);
+- kind: base body, "rock" (default, random polyhedron), "superellipsoid"
+  (kernels and seeds, with `exponent`) or "cylinder" (pellets, with
+  `exponent` and `aspect` = radius / half-length range); crease, dent and
+  chip_axis="x" shape kernels and pellet ends (see granulat/shape.py);
 - sphere: True for exact spheres (glass beads, the reference);
 - category: display family (see CATEGORIES).
 
@@ -26,7 +30,7 @@ deposit.
 """
 
 # display order of the categories
-CATEGORIES = ["Sand", "Gravel", "Pebbles", "Industrial", "Space", "Reference"]
+CATEGORIES = ["Sand", "Gravel", "Pebbles", "Industrial", "Agricultural", "Pellets", "Space", "Reference"]
 
 PRESETS = {
     # ------------------------------------------------------------------ Sand
@@ -340,6 +344,166 @@ PRESETS = {
             ("dull coal", 0.60, (0.07, 0.07, 0.07)),
             ("bright coal", 0.30, (0.11, 0.11, 0.12)),
             ("shale", 0.10, (0.30, 0.30, 0.30)),
+        ],
+    },
+    # ---------------------------------------------------------- Agricultural
+    "wheat": {
+        "category": "Agricultural",
+        "label": "Wheat kernels",
+        "kind": "superellipsoid",
+        "exponent": 2.0,
+        "phi_mean": -2.0,  # ~4 mm nominal (about 6.5 x 3.3 x 3 mm)
+        "phi_std": 0.15,
+        "elongation_beta": (10.0, 10.0),  # I/L ~0.5
+        "flatness_beta": (18.0, 2.0),  # S/I ~0.9
+        "taper": (0.1, 0.2),  # germ end narrower than brush end
+        "crease": (0.12, 0.12),  # ventral groove along the kernel
+        "lumpiness": (0.0, 0.03),
+        "facets": (4, 4),  # unused for kernels
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1400.0,  # kernel true density
+        "friction": 0.40,
+        "restitution": 0.40,
+        "absorption": 0.30,  # kernels swell when soaked
+        "subdivisions": 4,
+        "minerals": [
+            ("golden kernel", 0.75, (0.78, 0.56, 0.30)),
+            ("pale kernel", 0.20, (0.86, 0.70, 0.45)),
+            ("reddish kernel", 0.05, (0.62, 0.36, 0.20)),
+        ],
+    },
+    "maize": {
+        "category": "Agricultural",
+        "label": "Maize kernels",
+        "kind": "superellipsoid",
+        "exponent": 2.8,  # boxy, wedge-like
+        "phi_mean": -2.87,  # ~7.3 mm nominal (about 11 x 8 x 4.5 mm)
+        "phi_std": 0.15,
+        "elongation_beta": (14.0, 5.0),  # I/L ~0.74
+        "flatness_beta": (11.0, 9.0),  # S/I ~0.55
+        "flatness_min": 0.35,
+        "taper": (-0.5, -0.4),  # narrow tip (attachment), broad crown at -x
+        "dent": (0.05, 0.12, 0.35),  # dent corn: hollow in the crown
+        "lumpiness": (0.0, 0.04),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1280.0,
+        "friction": 0.45,
+        "restitution": 0.35,
+        "absorption": 0.30,
+        "subdivisions": 4,
+        "minerals": [
+            ("yellow kernel", 0.75, (0.90, 0.62, 0.15)),
+            ("orange kernel", 0.15, (0.85, 0.45, 0.10)),
+            ("white kernel", 0.10, (0.90, 0.86, 0.72)),
+        ],
+    },
+    "rice": {
+        "category": "Agricultural",
+        "label": "Rice (long grain, milled)",
+        "kind": "superellipsoid",
+        "exponent": 2.2,
+        "phi_mean": -1.49,  # ~2.8 mm nominal (about 6.8 x 2 x 1.6 mm)
+        "phi_std": 0.10,
+        "elongation_beta": (12.0, 28.0),  # I/L ~0.3: slender
+        "elongation_min": 0.2,
+        "flatness_beta": (16.0, 4.0),  # S/I ~0.8
+        "taper": (0.05, 0.15),
+        "dent": (0.02, 0.06, 0.25),  # embryo notch
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1450.0,
+        "friction": 0.40,
+        "restitution": 0.30,
+        "absorption": 0.25,
+        "subdivisions": 4,
+        "minerals": [
+            ("translucent white", 0.85, (0.88, 0.86, 0.80)),
+            ("chalky white", 0.10, (0.95, 0.94, 0.90)),
+            ("unpolished", 0.05, (0.74, 0.62, 0.45)),
+        ],
+    },
+    "soybean": {
+        "category": "Agricultural",
+        "label": "Soybeans",
+        "kind": "superellipsoid",
+        "exponent": 2.0,
+        "phi_mean": -2.7,  # ~6.5 mm
+        "phi_std": 0.15,
+        "elongation_beta": (18.0, 3.0),  # I/L ~0.86
+        "flatness_beta": (18.0, 3.0),  # S/I ~0.86
+        "dent": (0.02, 0.05, 0.15),  # hilum
+        "lumpiness": (0.0, 0.02),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1200.0,
+        "friction": 0.35,
+        "restitution": 0.45,
+        "absorption": 0.40,  # soybeans roughly double in mass when soaked
+        "subdivisions": 4,
+        "minerals": [
+            ("yellow bean", 0.80, (0.85, 0.72, 0.45)),
+            ("greenish bean", 0.12, (0.70, 0.70, 0.40)),
+            ("brown bean", 0.08, (0.55, 0.40, 0.25)),
+        ],
+    },
+    # --------------------------------------------------------------- Pellets
+    "plastic_pellets": {
+        "category": "Pellets",
+        "label": "Plastic pellets",
+        "kind": "cylinder",
+        "exponent": 8.0,  # strand-cut pellets: slightly rounded end edges
+        "aspect": (0.75, 1.1),  # radius / half-length: diameter ~ length
+        "phi_mean": -1.77,  # ~3.4 mm
+        "phi_std": 0.08,  # very uniform
+        "elongation_beta": (1.0, 1.0),  # unused for cylinders
+        "flatness_beta": (30.0, 2.0),  # cross-section slightly oval
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 950.0,  # polyethylene / polypropylene
+        "friction": 0.30,
+        "restitution": 0.50,
+        "absorption": 0.0,  # plastics do not absorb water (surface film only)
+        "subdivisions": 4,
+        "minerals": [
+            ("natural", 0.50, (0.86, 0.86, 0.82)),
+            ("white", 0.20, (0.95, 0.95, 0.95)),
+            ("black", 0.15, (0.08, 0.08, 0.08)),
+            ("blue", 0.10, (0.15, 0.35, 0.75)),
+            ("red", 0.05, (0.75, 0.15, 0.12)),
+        ],
+    },
+    "wood_pellets": {
+        "category": "Pellets",
+        "label": "Wood pellets",
+        "kind": "cylinder",
+        "exponent": 12.0,
+        "aspect": (0.2, 0.5),  # 6 mm diameter, 10-30 mm long
+        "phi_mean": -3.3,  # ~10 mm nominal
+        "phi_std": 0.25,
+        "elongation_beta": (1.0, 1.0),
+        "flatness_beta": (30.0, 2.0),
+        "chips": (1, 2),  # broken ends
+        "chip_axis": "x",
+        "chip_depth": (0.75, 0.95),
+        "lumpiness": (0.0, 0.02),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.015,  # pressed sawdust surface
+        "density": 1150.0,  # particle density
+        "friction": 0.50,
+        "restitution": 0.20,
+        "absorption": 0.50,  # swell and crumble when wet
+        "subdivisions": 4,
+        "minerals": [
+            ("light wood", 0.60, (0.72, 0.58, 0.40)),
+            ("dark wood", 0.30, (0.55, 0.42, 0.28)),
+            ("bark-rich", 0.10, (0.42, 0.32, 0.22)),
         ],
     },
     # ----------------------------------------------------------------- Space

@@ -58,3 +58,24 @@ def test_grain_mesh_is_watertight():
     params = {**BASE, "chips": 4, "lumpiness": 0.1, "pits": 3, "taper": 0.2}
     verts, faces = make_grain(np.random.default_rng(6), params)
     assert trimesh.Trimesh(verts, faces, process=False).is_watertight
+
+
+def test_superellipsoid_kernel_proportions():
+    rice = {**BASE, "kind": "superellipsoid", "exponent": 2.2, "elongation": 0.3, "flatness": 0.8}
+    m = measure(*make_grain(np.random.default_rng(7), rice))
+    assert m["elongation_IL"] == pytest.approx(0.3, abs=0.05)
+    assert m["convexity"] > 0.99
+
+
+def test_cylinder_pellet_has_flat_ends():
+    pellet = {**BASE, "kind": "cylinder", "exponent": 12.0, "aspect": 0.4, "flatness": 1.0}
+    verts, faces = make_grain(np.random.default_rng(8), pellet)
+    mesh = trimesh.Trimesh(verts, faces, process=False)
+    assert mesh.is_watertight
+    end_faces = np.abs(mesh.face_normals[:, 0]) > 0.98
+    assert mesh.area_faces[end_faces].sum() > 0.1 * mesh.area
+
+
+def test_unknown_kind_is_rejected():
+    with pytest.raises(ValueError):
+        make_grain(np.random.default_rng(9), {**BASE, "kind": "torus"})

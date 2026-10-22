@@ -2,17 +2,24 @@
 
 Each grain is an implicit volume, meshed with marching cubes:
 
-1. Base body: draw points on an ellipsoid (axes L >= I >= S set by the Zingg
+1. Base body, by `kind`:
+   - "rock" (default): draw points on an ellipsoid (axes L >= I >= S set by the Zingg
    ratios) and take their convex hull, a polyhedron whose number of facets
    sets the angularity. Its *gauge* g(x) = max_f (n_f . x) / d_f is 1 on the
    surface; replacing that max with a p-norm rounds edges and corners (low p =
    rounded grain, high p = sharp edges).
+   - "superellipsoid": smooth kernels and seeds (wheat, rice, soybean,
+     maize); the exponent goes from 2 (ellipsoid) towards boxy shapes.
+   - "cylinder": pellets; half-length 1, radius `aspect`, the exponent sets
+     how rounded the end edges are.
 2. Fracture chips: random planes cut the body, g = max(g, (n_c . x) / d_c),
    leaving flat broken faces with sharp edges, as on crushed stone or broken
-   pebbles.
+   pebbles. With chip_axis="x" the planes are nearly perpendicular to the long
+   axis: the broken ends of wood pellets.
 3. Egg taper: the cross-section grows along the long axis (coordinate warp).
 4. Non-convex irregularity as a height field on the direction u = x/|x|:
-   low-frequency lumps, pits (vesicles of scoria, dents of flint) and a light
+   low-frequency lumps, pits (vesicles of scoria, dents of flint), a crease
+   along the long axis (wheat), a dent at the broad end (maize) and a light
    surface roughness. The surface is g(x) = 1 + h(u).
 5. Mesh the zero level set with marching cubes, recentre on the centre of mass
    and scale to the target nominal diameter (diameter of the equal-volume
@@ -84,13 +91,41 @@ def _rounded_gauge(x, normals, offsets, p):
     return smax[:, 0] * ((s / safe) ** p).sum(axis=1) ** (1.0 / p)
 
 
+def _superellipsoid_gauge(x, axes, e):
+    return ((np.abs(x / axes) ** e).sum(axis=1)) ** (1.0 / e)
+
+
+def _cylinder_gauge(x, radius, ellipticity, e):
+    radial = np.sqrt((x[:, 1] / radius) ** 2 + (x[:, 2] / (radius * ellipticity)) ** 2)
+    return (np.abs(x[:, 0]) ** e + radial**e) ** (1.0 / e)
+
+
+def _body(rng, params):
+    """Return the base body's gauge function (homogeneous of degree 1)."""
+    kind = params.get("kind", "rock")
+    if kind == "rock":
+        normals, offsets = _base_polyhedron(rng, params)
+        p = params["roundness_p"]
+        return lambda x: _rounded_gauge(x, normals, offsets, p)
+    e = params.get("exponent", 2.0)
+    if kind == "superellipsoid":
+        axes = np.array([1.0, params["elongation"], params["elongation"] * params["flatness"]])
+        return lambda x: _superellipsoid_gauge(x, axes, e)
+    if kind == "cylinder":
+        aspect, ellipticity = params.get("aspect", 1.0), params["flatness"]
+        return lambda x: _cylinder_gauge(x, aspect, ellipticity, e)
+    raise ValueError(f"unknown grain kind '{kind}'")
+
+
 def make_grain(rng, params):
     """Return (vertices, faces) for one grain drawn according to `params`.
 
     params: dict with elongation (I/L), flatness (S/I), facets, roundness_p,
     roughness, diameter_m (target nominal diameter, metres), and optionally:
-    lumpiness, taper, chips, chip_depth, pits, pit_depth, pit_size
-    (irregularity, all off by default), resolution (marching-cubes cells
+    kind ("rock", "superellipsoid", "cylinder") with exponent and aspect,
+    lumpiness, taper, chips, chip_depth, chip_axis, pits, pit_depth, pit_size,
+    crease (depth, width), dent (depth range, size) (irregularity, all off by
+    default), resolution (marching-cubes cells
     along the longest axis, default 48), sphere=True for an exact sphere
     (meshed as an icosphere of `subdivisions`).
     """
@@ -100,16 +135,20 @@ def make_grain(rng, params):
         mesh = trimesh.Trimesh(dirs, faces, process=False)
         return dirs * (target_volume / abs(mesh.volume)) ** (1.0 / 3.0), faces
 
-    normals, offsets = _base_polyhedron(rng, params)
-    p = params["roundness_p"]
+    gauge = _body(rng, params)
 
-    # support of the rounded body, sampled on directions, to place the cuts
+    # support of the body, sampled on directions, to place the cuts
     dirs, _ = icosphere(4)
-    radius = 1.0 / _rounded_gauge(dirs, normals, offsets, p)
+    radius = 1.0 / gauge(dirs)
 
     cuts = []
     for _ in range(params.get("chips", 0)):
-        n = _random_unit_vectors(rng, 1)[0]
+        if params.get("chip_axis") == "x":
+            # nearly perpendicular to the long axis, at either end
+            n = np.array([rng.choice([-1.0, 1.0]), *rng.normal(0.0, 0.3, 2)])
+            n /= np.linalg.norm(n)
+        else:
+            n = _random_unit_vectors(rng, 1)[0]
         depth = rng.uniform(*params.get("chip_depth", (0.6, 0.85)))
         cuts.append((n, depth * np.max(radius * (dirs @ n))))
 
@@ -124,6 +163,11 @@ def make_grain(rng, params):
         depth = rng.uniform(*params.get("pit_depth", (0.08, 0.2)))
         size = rng.uniform(*params.get("pit_size", (0.2, 0.4)))
         pits.append((centre, depth, size))
+    crease = params.get("crease")  # (depth, angular width), on the -z side
+    dent = None
+    if params.get("dent"):
+        lo, hi, size = params["dent"]
+        dent = (rng.uniform(lo, hi), size)  # at the -x end
     rough = params.get("roughness", 0.0)
     rough_noise = _Noise(rng) if rough > 0 else None
 
@@ -132,7 +176,7 @@ def make_grain(rng, params):
         if taper:
             scale = 1.0 + taper * np.clip(x[:, 0] / x_extent, -1.0, 1.0)
             x = np.column_stack([x[:, 0], x[:, 1] / scale, x[:, 2] / scale])
-        g = _rounded_gauge(x, normals, offsets, p)
+        g = gauge(x)
         for n, d in cuts:
             g = np.maximum(g, (x @ n) / d)
         u = x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-30)
@@ -141,6 +185,14 @@ def make_grain(rng, params):
             h += lump * lump_noise(u)
         for centre, depth, size in pits:
             angle = np.arccos(np.clip(u @ centre, -1.0, 1.0))
+            h -= depth * np.exp(-((angle / size) ** 2))
+        if crease is not None:
+            depth, width = crease
+            ventral = 1.0 / (1.0 + np.exp(12.0 * u[:, 2]))
+            h -= depth * np.exp(-((u[:, 1] / width) ** 2)) * ventral
+        if dent is not None:
+            depth, size = dent
+            angle = np.arccos(np.clip(-u[:, 0], -1.0, 1.0))
             h -= depth * np.exp(-((angle / size) ** 2))
         if rough_noise is not None:
             h += rough * rough_noise(u)

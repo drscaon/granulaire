@@ -73,20 +73,25 @@ def sample_params(rng, preset, var: Variations):
     # irregularity: low-frequency lumps, egg taper, fracture chips, pits
     lump_lo, lump_hi = preset.get("lumpiness", (0.0, 0.0))
     lump = rng.uniform(lump_lo, lump_hi)
-    taper_max = preset.get("taper", 0.0)
-    taper = rng.uniform(-taper_max, taper_max)
+    # taper: a number gives a random sign up to that amount, a range keeps its sign
+    taper_spec = preset.get("taper", 0.0)
+    taper_lo, taper_hi = taper_spec if isinstance(taper_spec, tuple) else (-taper_spec, taper_spec)
+    taper = rng.uniform(taper_lo, taper_hi)
     chips_lo, chips_hi = preset.get("chips", (0, 0))
     chips = int(rng.integers(chips_lo, chips_hi + 1))
     pits_lo, pits_hi = preset.get("pits", (0, 0))
     pits = int(rng.integers(pits_lo, pits_hi + 1))
+    aspect_lo, aspect_hi = preset.get("aspect", (1.0, 1.0))
+    aspect = rng.uniform(aspect_lo, aspect_hi)
 
     if not var.size:
         phi = preset["phi_mean"]
     if not var.shape:
         elong = _beta_mean(preset["elongation_beta"])
         flat = _beta_mean(preset["flatness_beta"])
-        lump, taper = (lump_lo + lump_hi) / 2, 0.0
+        lump, taper = (lump_lo + lump_hi) / 2, (taper_lo + taper_hi) / 2
         chips, pits = round((chips_lo + chips_hi) / 2), round((pits_lo + pits_hi) / 2)
+        aspect = (aspect_lo + aspect_hi) / 2
     if not var.roundness:
         facets = (preset["facets"][0] + preset["facets"][1]) // 2
         p = float(np.sqrt(lo_p * hi_p))
@@ -99,6 +104,12 @@ def sample_params(rng, preset, var: Variations):
         "facets": facets,
         "roundness_p": p,
         "roughness": preset["roughness"],
+        "kind": preset.get("kind", "rock"),
+        "exponent": preset.get("exponent", 2.0),
+        "aspect": aspect,
+        "crease": preset.get("crease"),
+        "dent": preset.get("dent"),
+        "chip_axis": preset.get("chip_axis"),
         "lumpiness": lump,
         "taper": taper,
         "chips": chips,
