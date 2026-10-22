@@ -125,7 +125,7 @@ def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
 
 
 def test_tetrahedra_fill_the_grain():
-    scene = generate_scene("starch_peanuts", shapes=2, copies=1)
+    scene = generate_scene("packing_peanuts", shapes=2, copies=1)
     for p in scene.prototypes:
         pts = p["tet_points"][p["tets"]]
         vol = np.einsum(
@@ -135,9 +135,9 @@ def test_tetrahedra_fill_the_grain():
         assert vol.sum() / 6 == pytest.approx(p["metrics"]["volume_m3"], rel=0.15)
 
 
-@pytest.mark.parametrize("key", ["packing_peanuts", "starch_peanuts"])
+@pytest.mark.parametrize("key", ["packing_peanuts"])
 def test_packing_peanuts_have_no_moisture_states(key, tmp_path):
-    # polystyrene stays dry (water runs off), starch dissolves: no wet state
+    # expanded polystyrene never gets wet: water runs off
     scene = generate_scene(key, shapes=2, copies=1, variations=Variations(moisture=True))
     assert scene.states is None and scene.variations.moisture is False
     folder = write_outputs(scene, tmp_path)

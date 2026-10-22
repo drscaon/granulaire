@@ -6,7 +6,7 @@ Everything runs on CPU.
 
 ![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
 
-*Five different grains of each of the 24 presets, dry, damp, wet and
+*Five different grains of each of the 23 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
 Regenerate with `granulat render-gallery` (see Usage).*
@@ -52,7 +52,7 @@ granulat render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
 
 The README gallery comes from generating every preset with `--moisture`, then
-`granulat render-gallery` on all 24 output folders in category order, with
+`granulat render-gallery` on all 23 output folders in category order, with
 `--output docs/images/moisture_gallery.png`.
 
 `python -m granulat ...` works too. From Python:
@@ -75,7 +75,7 @@ write_outputs(scene, "output")
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
 | Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
-| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable); both **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`), and **no moisture**: water runs off polystyrene, and starch peanuts dissolve |
+| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped): **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`), and **no moisture**: EPS never gets wet, water runs off |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
@@ -113,13 +113,13 @@ selection. Blender's USD importer takes the state selected at import time.
 Contact and cohesion coefficients are indicative and still need calibrating.
 
 Presets with no moisture states, even with `--moisture`: the regoliths (no
-liquid water), polystyrene packing peanuts (water runs off, they stay dry) and
-starch packing peanuts (they dissolve; a dissolving grain is not modelled).
+liquid water) and the polystyrene packing peanuts (EPS never gets wet: water
+runs off).
 
 ### Deformable grains (packing peanuts)
 
 > **Works only with NVIDIA OmniPhysics.** Deformable simulation of
-> `packing_peanuts` and `starch_peanuts` requires an engine that reads NVIDIA's
+> `packing_peanuts` requires an engine that reads NVIDIA's
 > OmniPhysics deformable schema: Omniverse Kit and Isaac Sim 5 or later, where
 > PhysX runs it on the GPU. Other tools (Blender, usdview, MuJoCo, Bullet,
 > engines reading only standard UsdPhysics) open the file but see the peanuts
@@ -158,8 +158,7 @@ built on the core `UsdGeom.TetMesh`:
   updated Granulat. If OpenUSD standardises deformables, the export will move
   to that schema.
 - `--no-deformable` exports the same presets as rigid bodies.
-- Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1; starch foam: E ≈ 0.8 MPa,
-  ν ≈ 0.15) are indicative.
+- Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1) are indicative.
 
 ## Outputs (per preset, under `output/<preset>/`)
 
@@ -209,7 +208,7 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 |---|---|---|
 | **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
 | **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
-| **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `starch_peanuts` (18 mm · ~60 mg), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
+| **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
 | **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (40 mm · ~110 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (47 mm · ~240 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
 
 For elongated or flat grains (rice, maize, beans, pellets), the **thickness** is what

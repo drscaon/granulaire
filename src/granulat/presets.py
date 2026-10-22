@@ -18,8 +18,7 @@ rather than a single shape:
 - absorption: water absorbed by the grain at saturation, as a fraction of its
   dry mass (internal porosity; see granulat/moisture.py);
 - moisture: False where a wet state makes no sense: no liquid water
-  (regoliths), water runs off (polystyrene peanuts) or the grain dissolves
-  (starch peanuts); moisture_note says why;
+  (regoliths) or water runs off (polystyrene peanuts); moisture_note says why;
 - kind: base body, "rock" (default, random polyhedron), "superellipsoid"
   (kernels and seeds, with `exponent`) or "cylinder" (pellets, with
   `exponent` and `aspect` = radius / half-length range); crease, dent and
@@ -578,34 +577,6 @@ PRESETS = {
             ("white EPS", 0.60, (0.95, 0.95, 0.93)),
             ("green recycled EPS", 0.25, (0.45, 0.70, 0.45)),
             ("pink antistatic EPS", 0.15, (0.92, 0.65, 0.72)),
-        ],
-    },
-    "starch_peanuts": {
-        "category": "Packaging",
-        "label": "Starch packing peanuts",
-        "kind": "tube",
-        "curves": {"straight": 0.6, "C": 0.4},
-        "curve_amplitude": (0.0, 0.15),
-        "aspect": (0.40, 0.55),
-        "phi_mean": -4.2,  # ~18 mm nominal, ~30 mm long
-        "phi_std": 0.15,
-        "elongation_beta": (1.0, 1.0),
-        "flatness_beta": (18.0, 2.0),
-        "lumpiness": (0.03, 0.08),  # puffed, irregular
-        "facets": (4, 4),
-        "roundness_p": (1.0, 1.0),
-        "roughness": 0.03,
-        "density": 18.0,  # extruded starch foam
-        "friction": 0.55,
-        "restitution": 0.25,
-        "absorption": 0.0,
-        "moisture": False,  # dissolves in water: not modelled
-        "moisture_note": "dissolves in water",
-        "deformable": {"youngs_modulus": 0.8e6, "poissons_ratio": 0.15, "tet_resolution": 18},
-        "subdivisions": 4,
-        "minerals": [
-            ("off-white starch", 0.80, (0.92, 0.88, 0.76)),
-            ("pale yellow starch", 0.20, (0.93, 0.85, 0.60)),
         ],
     },
     # ----------------------------------------------------------------- Space
