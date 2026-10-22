@@ -1,8 +1,20 @@
-# Granulaire
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.svg">
+    <img alt="granulaire" src="docs/images/logo.svg" width="420">
+  </picture>
+</h1>
 
-Procedural granular materials for simulation: realistic grains instead of
-perfect spheres, exported to **OpenUSD** with physical properties.
-Everything runs on CPU.
+<p align="center"><strong>Realistic granular materials for physical AI.</strong></p>
+
+Granulaire generates sand, gravel, pebbles, seeds, pellets and packing peanuts
+with realistic, measured shapes, sizes, masses and moisture, and exports them
+to **OpenUSD**. It is built for **physical AI**: robots trained and tested in
+simulation (reinforcement learning, virtual test campaigns, sim-to-real) need
+ground that looks and behaves like the real thing, not perfect spheres, and
+perception models need synthetic images with exact ground truth. Everything
+runs on CPU; see [Physics limits by grain size](#physics-limits-by-grain-size)
+for what current engines can simulate.
 
 ![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
 
@@ -298,3 +310,6 @@ ruff format .     # format
 ## License
 
 [MIT](LICENSE) © 2026 Daniel Régis Sarmento Caon
+
+The logo is set in IBM Plex Sans (SIL Open Font License 1.1), outlined into
+paths, so it displays without the font installed.

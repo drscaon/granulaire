@@ -8,6 +8,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - MIT license.
+- Logo (light and dark versions, "ai" highlighted, a grain as the dot of
+  the "i") and a physical-AI description in the README.
 - Agricultural presets: `wheat`, `maize`, `rice`, `beans`, `soybean`; pellet presets:
   `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
 - Deformable packing peanuts: `packing_peanuts` (EPS), new Packaging
