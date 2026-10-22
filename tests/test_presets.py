@@ -66,3 +66,23 @@ def test_beach_pebbles_are_flatter_and_river_pebbles_rounder():
 def test_beach_pebbles_are_dark_basalt_and_white_marble():
     names = {name for name, _, _ in PRESETS["beach_pebbles"]["minerals"]}
     assert any("basalt" in n for n in names) and any("marble" in n for n in names)
+
+
+def test_readme_friction_table_matches_presets():
+    """The README friction table is written by hand: keep it in sync with the code."""
+    import re
+    from pathlib import Path
+
+    from granulaire.moisture import STATE_PARAMS
+
+    readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
+    rows = dict(re.findall(r"^\| `(\w+)` \| (\d\.\d\d \|.*)\|$", readme, re.M))
+    for key, preset in PRESETS.items():
+        cells = [c.strip() for c in rows[key].split("|")]
+        mu, e = preset.get("friction", 0.6), preset.get("restitution", 0.1)
+        expected = [f"{mu:.2f}", f"{mu * 0.9:.2f}", f"{e:.2f}"]
+        if preset.get("moisture", True):
+            expected += [f"{mu * STATE_PARAMS[s]['mu']:.2f}" for s in ("damp", "wet", "saturated")]
+        else:
+            expected += ["—"] * 3
+        assert cells == expected, key
