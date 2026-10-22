@@ -14,6 +14,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   GitHub release, marked as a pre-release for alpha, beta and rc versions.
 - Dependabot for GitHub Actions and Python dependencies.
 - CI, Python and license badges in the README.
+- GitHub Flow: changes reach `main` only through pull requests from
+  short-lived branches; a versioned `pre-push` hook (`.githooks/`) refuses
+  direct pushes to `main`.
 
 ## [0.2.0b1] - 2026-10-22 (beta)
 
@@ -22,7 +25,7 @@ First beta, under the new name Granulaire.
 ### Added
 - MIT license.
 - "Granulaire" logo (light and dark versions, "ai" highlighted, a shaded
-  hexagonal grain as the dot of the "i") and a physical-AI description in the
+  hexagonal grain as the dot of the "i") and a Physical AI description in the
   README.
 - Agricultural presets: `wheat`, `maize`, `rice`, `beans`, `soybean`; pellet presets:
   `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
