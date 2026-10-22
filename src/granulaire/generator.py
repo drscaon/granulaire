@@ -55,6 +55,7 @@ class Scene:
     side: int
     moisture_weights: dict | None = field(default=None)
     deformable: dict | None = field(default=None)
+    shuffle: bool = True
 
 
 def _beta_mean(ab):
@@ -166,8 +167,15 @@ def generate_scene(
     variations: Variations | None = None,
     moisture_weights: str = moisture.DEFAULT_WEIGHTS,
     deformable: bool = True,
+    shuffle: bool = True,
 ) -> Scene:
     """Build the grain library and the mixed scene in memory.
+
+    The scene holds `shapes` distinct grains, each placed `copies` times
+    (shapes * copies grains in all). With shuffle=True (default) the copies are
+    mixed in random order; with shuffle=False the copies of each shape are
+    placed next to each other, shape after shape, which is handy to compare
+    shapes. Everything else in the scene is identical either way.
 
     Presets with a "deformable" entry (packing peanuts) also get a tetrahedral
     simulation mesh per grain and are exported as deformable bodies, unless
@@ -175,6 +183,8 @@ def generate_scene(
     """
     if preset_key not in PRESETS:
         raise KeyError(f"unknown preset '{preset_key}'")
+    if shapes < 1 or copies < 1:
+        raise ValueError(f"shapes and copies must be at least 1 (got shapes={shapes}, copies={copies})")
     preset = PRESETS[preset_key]
     var = variations or Variations()
     use_moisture = var.moisture and moisture_applies(preset_key)
@@ -221,9 +231,14 @@ def generate_scene(
                 }
         prototypes.append(proto)
 
-    # Mixing: each shape appears `copies` times, in random order,
-    # with its own random orientation.
-    order = rng.permutation(np.repeat(np.arange(shapes), copies))
+    # Mixing: each shape appears `copies` times, in random order unless
+    # shuffle=False, with its own random orientation. The permutation is always
+    # drawn so that turning shuffling off leaves positions and orientations
+    # unchanged.
+    grouped = np.repeat(np.arange(shapes), copies)
+    order = rng.permutation(grouped)
+    if not shuffle:
+        order = grouped
     n = len(order)
     side = int(np.ceil(n ** (1 / 3)))
     spacing = 1.15 * max(p["metrics"]["L_m"] for p in prototypes)
@@ -261,6 +276,7 @@ def generate_scene(
         side,
         weights,
         soft,
+        shuffle,
     )
 
 
@@ -276,6 +292,7 @@ def summarize(scene: Scene) -> dict:
         "shapes": len(protos),
         "grains": len(scene.instances),
         "copies_per_shape": len(scene.instances) // len(protos),
+        "shuffled": bool(scene.shuffle),
         "seed": scene.seed,
         "variations": asdict(scene.variations),
         "d50_mm": float(np.median(m["diameter_nominal_m"]) * 1000),
