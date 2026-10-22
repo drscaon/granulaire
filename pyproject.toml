@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "granulat"
+version = "0.1.0"
+description = "Procedural granular materials (sand, gravel, pebbles) for simulation, exported to OpenUSD."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Daniel Régis Sarmento Caon" }]
+keywords = ["granular", "simulation", "openusd", "procedural", "robotics"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "trimesh>=4.0",
+    "usd-core>=24.0",
+]
+
+[project.optional-dependencies]
+render = ["matplotlib>=3.7"]
+dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7"]
+
+[project.scripts]
+granulat = "granulat.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
