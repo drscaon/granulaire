@@ -118,7 +118,7 @@ dominates for porous stone (pozzolana) and for anything that soaks
 |---|---|---|---|
 | Beach sand | +3.6 % | +14 % | +24 % |
 | Pozzolana (porous) | +6.2 % | +17 % | +22 % |
-| Crushed gravel | +0.5 % | +1.5 % | +2.3 % |
+| Crushed gravel | +0.5 % | +1.5 % | +2.2 % |
 | Beach pebbles | +0.2 % | +0.5 % | +0.7 % |
 | Plastic pellets | +1.0 % | +4.0 % | +7.0 % |
 | Wheat | +9.6 % | +26 % | +34 % |
