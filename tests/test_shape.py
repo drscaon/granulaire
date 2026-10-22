@@ -79,3 +79,10 @@ def test_cylinder_pellet_has_flat_ends():
 def test_unknown_kind_is_rejected():
     with pytest.raises(ValueError):
         make_grain(np.random.default_rng(9), {**BASE, "kind": "torus"})
+
+
+def test_bend_gives_a_kidney_shape():
+    bean = {**BASE, "kind": "superellipsoid", "elongation": 0.55, "flatness": 0.75}
+    straight = measure(*make_grain(np.random.default_rng(10), bean))
+    kidney = measure(*make_grain(np.random.default_rng(10), {**bean, "bend": (0.85, 0.85)}))
+    assert kidney["convexity"] < straight["convexity"] - 0.005

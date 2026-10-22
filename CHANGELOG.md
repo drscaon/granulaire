@@ -7,10 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Agricultural presets: `wheat`, `maize`, `rice`, `soybean`; pellet presets:
+- Agricultural presets: `wheat`, `maize`, `rice`, `beans`, `soybean`; pellet presets:
   `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
 - Shape families: superellipsoid (kernels, seeds) and cylinder (pellets),
-  plus crease, crown dent and axial end cuts.
+  plus crease, crown dent, kidney bend and axial end cuts.
 - Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge
   taper and pits, so material families look clearly different.
 - `granulat render-gallery`: several grains per preset shown in every

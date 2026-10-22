@@ -16,7 +16,9 @@ Each grain is an implicit volume, meshed with marching cubes:
    leaving flat broken faces with sharp edges, as on crushed stone or broken
    pebbles. With chip_axis="x" the planes are nearly perpendicular to the long
    axis: the broken ends of wood pellets.
-3. Egg taper: the cross-section grows along the long axis (coordinate warp).
+3. Egg taper: the cross-section grows along the long axis; bend: the grain
+   curves in the length-width plane, giving a kidney shape (beans). Both are
+   coordinate warps.
 4. Non-convex irregularity as a height field on the direction u = x/|x|:
    low-frequency lumps, pits (vesicles of scoria, dents of flint), a crease
    along the long axis (wheat), a dent at the broad end (maize) and a light
@@ -124,7 +126,8 @@ def make_grain(rng, params):
     roughness, diameter_m (target nominal diameter, metres), and optionally:
     kind ("rock", "superellipsoid", "cylinder") with exponent and aspect,
     lumpiness, taper, chips, chip_depth, chip_axis, pits, pit_depth, pit_size,
-    crease (depth, width), dent (depth range, size) (irregularity, all off by
+    crease (depth, width), dent (depth range, size) with dent_dir (default
+    the -x end), bend (range of curvature) (irregularity, all off by
     default), resolution (marching-cubes cells
     along the longest axis, default 48), sphere=True for an exact sphere
     (meshed as an icosphere of `subdivisions`).
@@ -154,6 +157,8 @@ def make_grain(rng, params):
 
     taper = params.get("taper", 0.0)
     x_extent = np.max(np.abs(radius * dirs[:, 0]))
+    y_extent = np.max(np.abs(radius * dirs[:, 1]))
+    bend = rng.uniform(*params["bend"]) if params.get("bend") else 0.0
 
     lump = params.get("lumpiness", 0.0)
     lump_noise = _Noise(rng, n_waves=8, freq_range=(1.2, 3.2)) if lump > 0 else None
@@ -167,7 +172,8 @@ def make_grain(rng, params):
     dent = None
     if params.get("dent"):
         lo, hi, size = params["dent"]
-        dent = (rng.uniform(lo, hi), size)  # at the -x end
+        direction = np.asarray(params.get("dent_dir") or (-1.0, 0.0, 0.0), dtype=float)
+        dent = (rng.uniform(lo, hi), size, direction / np.linalg.norm(direction))
     rough = params.get("roughness", 0.0)
     rough_noise = _Noise(rng) if rough > 0 else None
 
@@ -176,6 +182,10 @@ def make_grain(rng, params):
         if taper:
             scale = 1.0 + taper * np.clip(x[:, 0] / x_extent, -1.0, 1.0)
             x = np.column_stack([x[:, 0], x[:, 1] / scale, x[:, 2] / scale])
+        if bend:
+            # ends shifted towards +y: the inner (concave) side faces +y
+            shift = bend * y_extent * np.clip(x[:, 0] / x_extent, -1.0, 1.0) ** 2
+            x = np.column_stack([x[:, 0], x[:, 1] - shift, x[:, 2]])
         g = gauge(x)
         for n, d in cuts:
             g = np.maximum(g, (x @ n) / d)
@@ -191,8 +201,8 @@ def make_grain(rng, params):
             ventral = 1.0 / (1.0 + np.exp(12.0 * u[:, 2]))
             h -= depth * np.exp(-((u[:, 1] / width) ** 2)) * ventral
         if dent is not None:
-            depth, size = dent
-            angle = np.arccos(np.clip(-u[:, 0], -1.0, 1.0))
+            depth, size, direction = dent
+            angle = np.arccos(np.clip(u @ direction, -1.0, 1.0))
             h -= depth * np.exp(-((angle / size) ** 2))
         if rough_noise is not None:
             h += rough * rough_noise(u)
@@ -201,6 +211,7 @@ def make_grain(rng, params):
     # grid: uniform spacing, fine enough for the thinnest axis
     extent = np.max(np.abs(radius[:, None] * dirs), axis=0)
     extent *= 1.0 + abs(taper) + lump + 0.05
+    extent[1] += bend * y_extent
     res = params.get("resolution", 48)
     step = min(2 * extent.max() / res, 2 * extent.min() / 14)
     n_cells = np.ceil(2 * extent / step).astype(int) + 3

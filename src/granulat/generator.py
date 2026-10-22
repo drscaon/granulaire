@@ -109,6 +109,9 @@ def sample_params(rng, preset, var: Variations):
         "aspect": aspect,
         "crease": preset.get("crease"),
         "dent": preset.get("dent"),
+        "dent_dir": preset.get("dent_dir"),
+        # drawn inside make_grain from the grain's own stream; mean when shape is off
+        "bend": preset.get("bend") if var.shape or not preset.get("bend") else (sum(preset["bend"]) / 2,) * 2,
         "chip_axis": preset.get("chip_axis"),
         "lumpiness": lump,
         "taper": taper,

@@ -426,6 +426,34 @@ PRESETS = {
             ("unpolished", 0.05, (0.74, 0.62, 0.45)),
         ],
     },
+    "beans": {
+        "category": "Agricultural",
+        "label": "Common beans",
+        "kind": "superellipsoid",
+        "exponent": 2.2,
+        "phi_mean": -3.16,  # ~9 mm nominal (about 15 x 8 x 6 mm)
+        "phi_std": 0.15,
+        "elongation_beta": (11.0, 9.0),  # I/L ~0.55
+        "flatness_beta": (15.0, 5.0),  # S/I ~0.75
+        "bend": (0.60, 0.85),  # kidney shape (above 0.5 the inner side turns concave)
+        "dent": (0.03, 0.06, 0.18),  # hilum, on the inner side
+        "dent_dir": (0.0, 1.0, 0.0),
+        "lumpiness": (0.0, 0.02),
+        "facets": (4, 4),
+        "roundness_p": (1.0, 1.0),
+        "roughness": 0.0,
+        "density": 1300.0,
+        "friction": 0.35,
+        "restitution": 0.40,
+        "absorption": 0.90,  # dry beans about double in mass when soaked
+        "subdivisions": 4,
+        "minerals": [
+            ("red kidney", 0.35, (0.45, 0.10, 0.10)),
+            ("white navy", 0.25, (0.92, 0.90, 0.84)),
+            ("black bean", 0.20, (0.08, 0.07, 0.08)),
+            ("pinto", 0.20, (0.78, 0.62, 0.48)),
+        ],
+    },
     "soybean": {
         "category": "Agricultural",
         "label": "Soybeans",
