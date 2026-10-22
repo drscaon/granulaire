@@ -6,7 +6,7 @@ Everything runs on CPU.
 
 ![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
 
-*Five different grains of each of the 22 presets, dry, damp, wet and
+*Five different grains of each of the 24 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
 Regenerate with `granulat render-gallery` (see Usage).*
@@ -49,7 +49,7 @@ granulat render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
 
 The README gallery comes from generating every preset with `--moisture`, then
-`granulat render-gallery` on all 22 output folders in category order, with
+`granulat render-gallery` on all 24 output folders in category order, with
 `--output docs/images/moisture_gallery.png`.
 
 `python -m granulat ...` works too. From Python:
@@ -72,6 +72,7 @@ write_outputs(scene, "output")
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
 | Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
+| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable, no moisture: they dissolve); both **deformable** |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
@@ -107,6 +108,35 @@ Every prototype carries a `moisture` variant set (`dry`, `damp`, `wet`,
 In usdview or Omniverse, change a grain's state by changing its variant
 selection. Blender's USD importer takes the state selected at import time.
 Contact and cohesion coefficients are indicative and still need calibrating.
+
+### Deformable grains (packing peanuts)
+
+Core OpenUSD has no deformable-body schema yet: UsdPhysics covers rigid
+bodies. Deformable presets follow NVIDIA's **OmniPhysics deformable schema**
+(Omniverse, Isaac Sim 5), which is built on the core `UsdGeom.TetMesh`:
+
+```
+/World/Prototypes/Grain_000   Xform  + OmniPhysicsDeformableBodyAPI (omniphysics:mass)
+  geom                        Mesh   + OmniPhysicsDeformablePoseAPI:custom (bind pose)
+  sim                         TetMesh + OmniPhysicsVolumeDeformableSimAPI
+                                      + OmniPhysicsDeformablePoseAPI:custom
+                                      + PhysicsCollisionAPI
+/World/Looks/Phys[_<state>]   Material + OmniPhysicsDeformableMaterialAPI
+                              (Young's modulus, Poisson's ratio, density, friction)
+```
+
+- The simulation mesh fills the grain's volume with tetrahedra (voxels split
+  into 6 tetrahedra each, ~1,200 per peanut); the render mesh follows it
+  through the bind pose. The tetrahedral volume matches the surface within a
+  few percent.
+- The schemas are applied by name, so the file stays valid OpenUSD in any
+  tool; engines that do not know them see a static mesh. `usd-core` does not
+  list unregistered schemas in `GetAppliedSchemas()`, but they are in the
+  file (`apiSchemas` metadata).
+- In Omniverse / Isaac Sim, PhysX simulates deformable bodies on the GPU.
+- `--no-deformable` exports the same presets as rigid bodies.
+- Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1; starch foam: E ≈ 0.8 MPa,
+  ν ≈ 0.15) are indicative.
 
 ## Outputs (per preset, under `output/<preset>/`)
 
@@ -156,11 +186,14 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 |---|---|---|
 | **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
 | **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
-| **Workable with tuning** | `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
+| **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `starch_peanuts` (18 mm · ~60 mg), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
 | **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (40 mm · ~110 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (47 mm · ~240 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
 
 For elongated or flat grains (rice, maize, beans, pellets), the **thickness** is what
-matters for tunnelling, not the nominal size.
+matters for tunnelling, not the nominal size. Packing peanuts are large but
+weigh almost nothing: the mass ratio with anything they touch is the main risk,
+and as deformable bodies they need an engine that supports the OmniPhysics
+deformable schema.
 
 These are orders of magnitude, not hard limits: the actual threshold depends
 on the engine, time step, solver iterations, contact settings and the bodies
@@ -182,9 +215,13 @@ the gravel and pebble presets.
   hundred grains; instancing is for rendering surfaces.
 - **Angularity is a proxy**, not Wadell roundness, and is only comparable
   between grains of the same mesh resolution.
-- **Collision uses the convex hull.** Pits, creases and dents are visible but
-  not part of the collision shape; hollow shells (whole seashells) are not
-  generated.
+- **Collision uses the convex hull** for rigid grains. Pits, creases and dents
+  are visible but not part of the collision shape; hollow shells (whole
+  seashells) are not generated. Deformable grains collide with their
+  tetrahedral mesh.
+- **Deformables rely on a vendor schema.** Until OpenUSD standardises
+  deformable bodies, only engines that read the OmniPhysics schema simulate
+  them.
 - **Mesh resolution.** Marching cubes runs on a 48-cell grid along the longest
   axis; the sharpest edges can show slight stair-stepping.
 

@@ -9,6 +9,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 - Agricultural presets: `wheat`, `maize`, `rice`, `beans`, `soybean`; pellet presets:
   `plastic_pellets`, `wood_pellets`; new categories Agricultural and Pellets.
+- Deformable packing peanuts: `packing_peanuts` (EPS) and `starch_peanuts`,
+  new Packaging category. Tube shape family (S, C or straight), tetrahedral
+  simulation mesh (`UsdGeom.TetMesh`) and NVIDIA OmniPhysics deformable
+  schemas (body, volume simulation, bind pose, material). `--no-deformable`
+  exports them as rigid bodies.
 - Shape families: superellipsoid (kernels, seeds) and cylinder (pellets),
   plus crease, crown dent, kidney bend and axial end cuts.
 - Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge
