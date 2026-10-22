@@ -15,6 +15,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   schemas (body, volume simulation, bind pose, material). Deformable
   simulation works only with NVIDIA OmniPhysics (Omniverse, Isaac Sim 5+);
   `--no-deformable` exports them as rigid bodies for other engines.
+  Neither has moisture states: polystyrene stays dry, starch dissolves.
 - Shape families: superellipsoid (kernels, seeds) and cylinder (pellets),
   plus crease, crown dent, kidney bend and axial end cuts.
 - Per-preset irregularity: fracture chips, low-frequency lumps, egg/wedge

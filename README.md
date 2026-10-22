@@ -75,7 +75,7 @@ write_outputs(scene, "output")
 | Industrial | `railway_ballast`, `iron_ore`, `coal` |
 | Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
-| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable, no moisture: they dissolve); both **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`) |
+| Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped), `starch_peanuts` (biodegradable); both **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`), and **no moisture**: water runs off polystyrene, and starch peanuts dissolve |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
@@ -111,6 +111,10 @@ Every prototype carries a `moisture` variant set (`dry`, `damp`, `wet`,
 In usdview or Omniverse, change a grain's state by changing its variant
 selection. Blender's USD importer takes the state selected at import time.
 Contact and cohesion coefficients are indicative and still need calibrating.
+
+Presets with no moisture states, even with `--moisture`: the regoliths (no
+liquid water), polystyrene packing peanuts (water runs off, they stay dry) and
+starch packing peanuts (they dissolve; a dissolving grain is not modelled).
 
 ### Deformable grains (packing peanuts)
 

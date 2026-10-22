@@ -17,8 +17,9 @@ rather than a single shape:
 - minerals: colours and proportions (rendering), density (mass);
 - absorption: water absorbed by the grain at saturation, as a fraction of its
   dry mass (internal porosity; see granulat/moisture.py);
-- moisture: False for a material where water makes no sense (regoliths) or
-  is not modelled (starch dissolves); moisture_note says why;
+- moisture: False where a wet state makes no sense: no liquid water
+  (regoliths), water runs off (polystyrene peanuts) or the grain dissolves
+  (starch peanuts); moisture_note says why;
 - kind: base body, "rock" (default, random polyhedron), "superellipsoid"
   (kernels and seeds, with `exponent`) or "cylinder" (pellets, with
   `exponent` and `aspect` = radius / half-length range); crease, dent and
@@ -568,7 +569,9 @@ PRESETS = {
         "density": 12.0,  # expanded polystyrene, piece density
         "friction": 0.50,
         "restitution": 0.30,
-        "absorption": 0.0,  # closed cells: surface film only
+        "absorption": 0.0,
+        "moisture": False,  # closed-cell polystyrene: water runs off, the peanut stays dry
+        "moisture_note": "water runs off",
         "deformable": {"youngs_modulus": 1.0e6, "poissons_ratio": 0.10, "tet_resolution": 18},
         "subdivisions": 4,
         "minerals": [

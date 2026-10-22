@@ -92,15 +92,13 @@ def _api_schemas(prim):
 def test_deformable_peanuts_follow_the_omniphysics_layout(tmp_path):
     from pxr import UsdGeom
 
-    scene = generate_scene(
-        "packing_peanuts", shapes=3, copies=1, seed=2, variations=Variations(moisture=True)
-    )
+    scene = generate_scene("packing_peanuts", shapes=3, copies=1, seed=2)
     folder = write_outputs(scene, tmp_path)
     stage = Usd.Stage.Open(str(folder / "granulat_packing_peanuts.usdc"))
     for prim, inst in zip(stage.GetPrimAtPath("/World/Grains").GetChildren(), scene.instances, strict=True):
         assert "OmniPhysicsDeformableBodyAPI" in _api_schemas(prim)
         assert not prim.HasAPI(UsdPhysics.RigidBodyAPI)
-        expected = scene.prototypes[inst["proto"]]["moisture"][inst["state"]]["mass"]
+        expected = scene.prototypes[inst["proto"]]["mass"]
         assert prim.GetAttribute("omniphysics:mass").Get() == pytest.approx(expected, rel=1e-6)
 
         sim = prim.GetChild("sim")
@@ -135,3 +133,14 @@ def test_tetrahedra_fill_the_grain():
         )
         assert (vol > 0).all()
         assert vol.sum() / 6 == pytest.approx(p["metrics"]["volume_m3"], rel=0.15)
+
+
+@pytest.mark.parametrize("key", ["packing_peanuts", "starch_peanuts"])
+def test_packing_peanuts_have_no_moisture_states(key, tmp_path):
+    # polystyrene stays dry (water runs off), starch dissolves: no wet state
+    scene = generate_scene(key, shapes=2, copies=1, variations=Variations(moisture=True))
+    assert scene.states is None and scene.variations.moisture is False
+    folder = write_outputs(scene, tmp_path)
+    stage = Usd.Stage.Open(str(folder / f"granulat_{key}.usdc"))
+    prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
+    assert not prim.GetVariantSets().HasVariantSet("moisture")
