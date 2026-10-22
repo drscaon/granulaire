@@ -12,6 +12,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   Node.js 20 deprecation warnings.
 
 ### Added
+- Blender screenshots of gravel and sand in the README ("In Blender").
 - Continuous integration with GitHub Actions: lint, tests on Python 3.10–3.13
   (Linux) and on macOS and Windows, command-line smoke test, package build and
   check.
