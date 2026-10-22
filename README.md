@@ -4,6 +4,13 @@ Procedural granular materials for simulation: realistic grains instead of
 perfect spheres, exported to **OpenUSD** with physical properties.
 Everything runs on CPU.
 
+![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
+
+*Five different grains of each of the 15 presets, dry, damp, wet and
+saturated, rendered from the generated meshes. Each grain is drawn at its own
+scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
+Regenerate with `granulat render-gallery` (see Usage).*
+
 ## What it does
 
 - Generates *N* distinct grain shapes (100 by default) from distributions
@@ -36,7 +43,12 @@ granulat generate --preset beach_pebbles --moisture --moisture-weights 0,20,50,3
 granulat generate --preset rounded_gravel --no-size --no-orientation
 granulat render output/beach_sand output/crushed_gravel
 granulat render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
+granulat render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
+
+The README gallery comes from generating every preset with `--moisture`, then
+`granulat render-gallery` on all 15 output folders in category order, with
+`--output docs/images/moisture_gallery.png`.
 
 `python -m granulat ...` works too. From Python:
 

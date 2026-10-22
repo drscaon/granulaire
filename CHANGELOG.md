@@ -7,6 +7,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `granulat render-gallery`: several grains per preset shown in every
+  moisture state; README illustrated with the 15-preset gallery.
 - README section on physics limits by grain size: which presets are unstable
   in current rigid-body engines, recommended settings, and why perception use
   is unaffected.
