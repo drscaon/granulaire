@@ -236,25 +236,28 @@ PRESETS = {
         "label": "River pebbles",
         "phi_mean": -5.5,  # ~45 mm
         "phi_std": 0.50,
-        "elongation_beta": (6.0, 3.0),
-        "flatness_beta": (4.0, 3.0),  # pebbles are often flattened
-        "facets": (18, 36),
-        "roundness_p": (1.5, 3.0),
-        "roughness": 0.006,
-        "lumpiness": (0.04, 0.12),
-        "taper": 0.25,
-        "chips": (0, 1),
-        "chip_depth": (0.75, 0.9),
-        "density": 2650.0,
+        # tumbled by steady, gentler currents: rounder, more equant than beach
+        # pebbles, uniformly smooth, no fresh fracture faces
+        "elongation_beta": (7.0, 2.5),  # mean I/L ~0.74
+        "flatness_beta": (6.0, 2.5),  # mean S/I ~0.71
+        "facets": (24, 40),
+        "roundness_p": (1.3, 2.0),
+        "roughness": 0.004,
+        "lumpiness": (0.02, 0.07),
+        "taper": 0.15,
+        "density": 2650.0,  # quartz, granite
         "friction": 0.50,
         "restitution": 0.20,
         "absorption": 0.006,
         "subdivisions": 4,
+        # rustic, earthy mix of varied minerals
         "minerals": [
-            ("granite", 0.35, (0.55, 0.52, 0.50)),
-            ("quartzite", 0.30, (0.78, 0.74, 0.68)),
-            ("basalt", 0.20, (0.25, 0.26, 0.28)),
-            ("sandstone", 0.15, (0.60, 0.45, 0.33)),
+            ("tan quartzite", 0.22, (0.76, 0.70, 0.60)),
+            ("grey granite", 0.20, (0.56, 0.54, 0.52)),
+            ("brown sandstone", 0.18, (0.55, 0.42, 0.30)),
+            ("buff limestone", 0.14, (0.72, 0.64, 0.52)),
+            ("green greenstone", 0.14, (0.42, 0.47, 0.38)),
+            ("red jasper", 0.12, (0.60, 0.35, 0.28)),
         ],
     },
     "beach_pebbles": {
@@ -262,27 +265,27 @@ PRESETS = {
         "label": "Beach pebbles",
         "phi_mean": -5.3,  # ~40 mm
         "phi_std": 0.40,
-        "elongation_beta": (6.0, 2.5),
-        "flatness_beta": (3.0, 3.0),  # discs: the surf flattens pebbles
-        "flatness_min": 0.30,
-        "facets": (20, 36),
-        "roundness_p": (1.5, 2.5),  # very rounded, polished
-        "roughness": 0.004,
-        "lumpiness": (0.03, 0.12),
-        "taper": 0.2,
-        "pits": (0, 2),
-        "pit_depth": (0.05, 0.12),
-        "pit_size": (0.2, 0.35),
-        "density": 2600.0,  # flint
-        "friction": 0.45,
-        "restitution": 0.20,
-        "absorption": 0.005,
+        # shaped by the back-and-forth of the waves: flatter, disc-shaped or
+        # oval, polished (e.g. Mexican beach pebbles)
+        "elongation_beta": (5.0, 2.5),  # mean I/L ~0.67: discs and ovals
+        "flatness_beta": (2.5, 4.0),  # mean S/I ~0.38: clearly flattened
+        "flatness_min": 0.22,
+        "facets": (24, 40),
+        "roundness_p": (1.3, 2.0),  # very rounded
+        "roughness": 0.002,  # sleek, polished
+        "lumpiness": (0.02, 0.06),
+        "taper": 0.15,
+        "density": 2850.0,  # dense basalt (~2900-3000) and marble (~2700)
+        "friction": 0.40,  # polished surfaces
+        "restitution": 0.25,
+        "absorption": 0.002,  # dense, low-porosity stones
         "subdivisions": 4,
         "minerals": [
-            ("grey flint", 0.40, (0.45, 0.45, 0.47)),
-            ("white quartzite", 0.25, (0.82, 0.80, 0.76)),
-            ("pink granite", 0.20, (0.66, 0.55, 0.50)),
-            ("basalt", 0.15, (0.24, 0.24, 0.26)),
+            ("black basalt", 0.30, (0.10, 0.10, 0.11)),
+            ("charcoal basalt", 0.25, (0.22, 0.23, 0.24)),
+            ("white marble", 0.20, (0.86, 0.85, 0.82)),
+            ("blue-grey basalt", 0.15, (0.30, 0.36, 0.44)),
+            ("grey marble", 0.10, (0.62, 0.62, 0.63)),
         ],
     },
     # ------------------------------------------------------------ Industrial

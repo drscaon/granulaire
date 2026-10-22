@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- River and beach pebbles now differ in shape and material:
+  - `river_pebbles`: rounder and more equant (mean S/I ~0.71), uniformly
+    smooth, no fracture chips; earthy mix of tan quartzite, grey granite, brown
+    sandstone, buff limestone, green greenstone and red jasper;
+  - `beach_pebbles`: flatter discs and ovals (mean S/I ~0.38), polished, no
+    pits; black, charcoal and blue-grey basalt, white and grey marble, with a
+    higher density (2850 kg/m³), lower absorption and friction.
+  README tables (weight gain, physics limits) and moisture gallery updated.
 - GitHub Actions moved to versions running on Node.js 24 (`actions/checkout@v7`,
   `actions/setup-python@v7`, `actions/upload-artifact@v7`), removing the
   Node.js 20 deprecation warnings.
