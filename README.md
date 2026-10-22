@@ -1,7 +1,7 @@
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.svg">
-    <img alt="granulaire" src="docs/images/logo.svg" width="420">
+    <img alt="Granulaire" src="docs/images/logo.svg" width="420">
   </picture>
 </h1>
 
