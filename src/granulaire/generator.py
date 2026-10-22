@@ -241,7 +241,10 @@ def generate_scene(
         order = grouped
     n = len(order)
     side = int(np.ceil(n ** (1 / 3)))
-    spacing = 1.15 * max(p["metrics"]["L_m"] for p in prototypes)
+    # bounding sphere of every grain around its origin: two neighbours never touch,
+    # whatever their orientation, even after the +/-5 % jitter on each axis
+    reach = max(float(np.linalg.norm(p["verts"], axis=1).max()) for p in prototypes)
+    spacing = 1.02 * 2 * reach / 0.9
     instances = []
     for j, proto in enumerate(order):
         ix, iy, iz = j % side, (j // side) % side, j // (side * side)

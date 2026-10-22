@@ -13,7 +13,7 @@
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
-Granulaire generates sand, gravel, pebbles, seeds, pellets and packing peanuts
+Granulaire generates sand, gravel, pebbles, seeds, fruit, pellets, rubber mulch and packing peanuts
 with realistic, measured shapes, sizes, masses and moisture, and exports them
 to **OpenUSD**. It is built for **Physical AI**: robots trained and tested in
 simulation (reinforcement learning, virtual test campaigns, sim-to-real) need
@@ -24,7 +24,7 @@ for what current engines can simulate.
 
 ![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
 
-*Five different grains of each of the 23 presets, dry, damp, wet and
+*Five different grains of each of the 25 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
 Regenerate with `granulaire render-gallery` (see Usage).*
@@ -45,9 +45,10 @@ Regenerate with `granulaire render-gallery` (see Usage).*
   materials, `UsdPhysics` rigid bodies (mass from volume and density,
   convex-hull collision, friction, restitution) and a collision ground.
 - Optionally gives every grain a moisture state through an OpenUSD variant set.
-- Exports packing peanuts as deformable bodies. **Deformable simulation works
-  only with NVIDIA OmniPhysics** (Omniverse, Isaac Sim 5+); see
-  [Deformable grains](#deformable-grains-packing-peanuts).
+- Exports packing peanuts and cherry tomatoes as deformable bodies.
+  **Deformable simulation works only with NVIDIA OmniPhysics** (Omniverse,
+  Isaac Sim 5+) and is **not tested yet**; see
+  [Deformable grains](#deformable-grains-packing-peanuts-cherry-tomatoes).
 
 ## Installation
 
@@ -72,7 +73,7 @@ granulaire render-gallery output/beach_sand output/crushed_gravel --grains 5
 ```
 
 The README gallery comes from generating every preset with `--moisture`, then
-`granulaire render-gallery` on all 23 output folders in category order, with
+`granulaire render-gallery` on all 25 output folders in category order, with
 `--output docs/images/moisture_gallery.png`.
 
 `python -m granulaire ...` works too. From Python:
@@ -105,8 +106,8 @@ the same.
 | Sand | `beach_sand`, `dune_sand`, `volcanic_sand` |
 | Gravel | `rounded_gravel`, `crushed_gravel`, `marble_chips`, `pozzolana` |
 | Pebbles | `river_pebbles` (rounded, equant, earthy mixed minerals), `beach_pebbles` (flat discs and ovals, polished basalt and marble) |
-| Industrial | `railway_ballast`, `iron_ore`, `coal` |
-| Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean` |
+| Industrial | `railway_ballast`, `iron_ore`, `coal`, `rubber_mulch` (shredded recycled tyres: torn, grippy, bouncy nuggets) |
+| Agricultural | `wheat` (kernels with a ventral crease), `maize` (wedge-shaped dent kernels), `rice` (long grain, milled), `beans` (kidney-shaped, mixed varieties), `soybean`, `cherry_tomatoes` (glossy skin, stem scar): **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`), **no moisture** (waxy skin) |
 | Pellets | `plastic_pellets` (PE/PP, ~3.4 mm), `wood_pellets` (6 mm diameter, 10–30 mm long, broken ends) |
 | Packaging | `packing_peanuts` (expanded polystyrene, S or C shaped): **deformable, NVIDIA OmniPhysics only** (rigid elsewhere with `--no-deformable`), and **no moisture**: EPS never gets wet, water runs off |
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
@@ -174,18 +175,24 @@ In usdview or Omniverse, change a grain's state by changing its variant
 selection. Blender's USD importer takes the state selected at import time.
 
 Presets with no moisture states, even with `--moisture`: the regoliths (no
-liquid water) and the polystyrene packing peanuts (EPS never gets wet: water
-runs off).
+liquid water), the polystyrene packing peanuts (EPS never gets wet: water
+runs off) and the cherry tomatoes (water beads on the waxy skin).
 
-### Deformable grains (packing peanuts)
+### Deformable grains (packing peanuts, cherry tomatoes)
 
-> **Works only with NVIDIA OmniPhysics.** Deformable simulation of
-> `packing_peanuts` requires an engine that reads NVIDIA's
-> OmniPhysics deformable schema: Omniverse Kit and Isaac Sim 5 or later, where
-> PhysX runs it on the GPU. Other tools (Blender, usdview, MuJoCo, Bullet,
-> engines reading only standard UsdPhysics) open the file but see the peanuts
-> as **static meshes with no physics**. For those, export with
+> **Works only with NVIDIA OmniPhysics, and not tested yet.** Deformable
+> simulation of `packing_peanuts` and `cherry_tomatoes` requires an engine that
+> reads NVIDIA's OmniPhysics deformable schema: Omniverse Kit and Isaac Sim 5 or
+> later, where PhysX runs it on the GPU. Other tools (Blender, usdview, MuJoCo,
+> Bullet, engines reading only standard UsdPhysics) open the file but see these
+> grains as **static meshes with no physics**. For those, export with
 > `--no-deformable` to get ordinary rigid bodies.
+>
+> Granulaire is developed without an NVIDIA GPU: the files are checked to be
+> valid OpenUSD with the documented schemas and attributes, but they have
+> **never been simulated in Isaac Sim**. In some releases the schema is a beta
+> feature that must be enabled. Feedback from anyone who runs them is very
+> welcome.
 
 Why: core OpenUSD has no deformable-body schema yet. UsdPhysics covers rigid
 bodies only ([UsdPhysics overview](https://openusd.org/dev/api/usd_physics_page_front.html));
@@ -202,12 +209,15 @@ built on the core `UsdGeom.TetMesh`:
   sim                         TetMesh + OmniPhysicsVolumeDeformableSimAPI
                                       + OmniPhysicsDeformablePoseAPI:custom
                                       + PhysicsCollisionAPI
-/World/Looks/Phys             Material + OmniPhysicsDeformableMaterialAPI
-                              (Young's modulus, Poisson's ratio, density, friction)
+/World/Looks/Phys             Material + OmniPhysicsBaseMaterialAPI (density, friction)
+                                       + OmniPhysicsDeformableMaterialAPI
+                                         (Young's modulus, Poisson's ratio)
+                                       + PhysxDeformableMaterialAPI
+                                         (elasticity damping)
 ```
 
 - The simulation mesh fills the grain's volume with tetrahedra (voxels split
-  into 6 tetrahedra each, ~1,200 per peanut); the render mesh follows it
+  into 6 tetrahedra each, ~1,300–1,400 per grain); the render mesh follows it
   through the bind pose. The tetrahedral volume matches the surface within a
   few percent.
 - The schemas are applied by name, so the file stays valid OpenUSD in any
@@ -219,7 +229,16 @@ built on the core `UsdGeom.TetMesh`:
   updated Granulaire. If OpenUSD standardises deformables, the export will move
   to that schema.
 - `--no-deformable` exports the same presets as rigid bodies.
-- Material values (EPS: E ≈ 1 MPa, ν ≈ 0.1) are indicative.
+- **Bounce.** Deformable materials have no restitution: a grain bounces
+  through its own elasticity, and `physxDeformableMaterial:elasticityDamping`
+  (1/s) sets how much energy each deformation loses. The values below are
+  uncalibrated starting points, to tune in Isaac Sim.
+- Material values are indicative:
+
+  | Preset | Young's modulus E | Poisson's ratio ν | Elasticity damping |
+  |---|---|---|---|
+  | `packing_peanuts` (EPS foam) | ≈ 1 MPa | ≈ 0.1 | 0.02 /s |
+  | `cherry_tomatoes` (soft fruit, keeps its volume when squeezed) | ≈ 0.5 MPa | ≈ 0.45 | 0.01 /s |
 
 ## Outputs (per preset, under `output/<preset>/`)
 
@@ -299,11 +318,13 @@ measurements of a specific deposit.
 | `railway_ballast` | 0.70 | 0.63 | 0.15 | 0.77 | 0.70 | 0.56 |
 | `iron_ore` | 0.70 | 0.63 | 0.12 | 0.77 | 0.70 | 0.56 |
 | `coal` | 0.55 | 0.50 | 0.10 | 0.61 | 0.55 | 0.44 |
+| `rubber_mulch` | 0.85 | 0.77 | 0.55 | 0.94 | 0.85 | 0.68 |
 | `wheat` | 0.40 | 0.36 | 0.40 | 0.44 | 0.40 | 0.32 |
 | `maize` | 0.45 | 0.41 | 0.35 | 0.50 | 0.45 | 0.36 |
 | `rice` | 0.40 | 0.36 | 0.30 | 0.44 | 0.40 | 0.32 |
 | `beans` | 0.35 | 0.32 | 0.40 | 0.39 | 0.35 | 0.28 |
 | `soybean` | 0.35 | 0.32 | 0.45 | 0.39 | 0.35 | 0.28 |
+| `cherry_tomatoes` | 0.45 | 0.41 | 0.20 | — | — | — |
 | `plastic_pellets` | 0.30 | 0.27 | 0.50 | 0.33 | 0.30 | 0.24 |
 | `wood_pellets` | 0.50 | 0.45 | 0.20 | 0.55 | 0.50 | 0.40 |
 | `packing_peanuts` | 0.50 | 0.45 | 0.30 | — | — | — |
@@ -311,9 +332,13 @@ measurements of a specific deposit.
 | `martian_regolith` | 0.70 | 0.63 | 0.05 | — | — | — |
 | `glass_beads` | 0.35 | 0.32 | 0.85 | 0.39 | 0.35 | 0.28 |
 
-— : no moisture states for this preset. Packing peanuts are deformable: NVIDIA
-OmniPhysics ignores static friction for deformables, so their single value is
-written as both static and dynamic friction.
+— : no moisture states for this preset. Packing peanuts and cherry tomatoes
+are deformable: NVIDIA OmniPhysics ignores static friction for deformables, so
+their single value is written as both static and dynamic friction, and
+restitution does not apply (their bounce comes from elasticity and damping, see
+[Deformable grains](#deformable-grains-packing-peanuts-cherry-tomatoes)); the
+restitution shown is used when they are exported as rigid bodies
+(`--no-deformable`).
 
 ### Which engines use it
 
@@ -359,7 +384,7 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 |---|---|---|
 | **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
 | **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
-| **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g) | Same settings as above; check stability against the heaviest body in contact |
+| **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g), `rubber_mulch` (20 mm, 12 mm thick · ~6 g), `cherry_tomatoes` (25 mm · ~8 g, deformable) | Same settings as above; check stability against the heaviest body in contact |
 | **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (38 mm, 18 mm thick · ~140 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (46 mm · ~230 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
 
 For elongated or flat grains (rice, maize, beans, pellets), the **thickness** is what
@@ -392,10 +417,11 @@ the gravel and pebble presets.
   are visible but not part of the collision shape; hollow shells (whole
   seashells) are not generated. Deformable grains collide with their
   tetrahedral mesh.
-- **Deformables work only with NVIDIA OmniPhysics.** Until OpenUSD standardises
-  deformable bodies, packing peanuts are simulated as deformables only in
-  Omniverse / Isaac Sim (GPU); elsewhere they are static meshes unless exported
-  with `--no-deformable`.
+- **Deformables work only with NVIDIA OmniPhysics, untested.** Until OpenUSD
+  standardises deformable bodies, packing peanuts and cherry tomatoes are
+  simulated as deformables only in Omniverse / Isaac Sim (GPU); elsewhere they
+  are static meshes unless exported with `--no-deformable`. They have not been
+  run in Isaac Sim yet.
 - **Mesh resolution.** Marching cubes runs on a 48-cell grid along the longest
   axis; the sharpest edges can show slight stair-stepping.
 
