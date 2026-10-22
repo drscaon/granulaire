@@ -40,3 +40,21 @@ def test_sphere_reference_is_a_sphere():
     m = measure(verts, faces)
     assert m["sphericity"] > 0.99
     assert m["elongation_IL"] == pytest.approx(1.0, abs=0.02)
+
+
+def test_irregularity_breaks_convexity_and_chips_cut_flat_faces():
+    smooth = measure(*make_grain(np.random.default_rng(4), BASE))
+    pitted = measure(*make_grain(np.random.default_rng(4), {**BASE, "lumpiness": 0.15, "pits": 6}))
+    assert pitted["convexity"] < smooth["convexity"] - 0.01
+
+    verts, faces = make_grain(np.random.default_rng(5), {**BASE, "roundness_p": 2.0, "chips": 3})
+    normals = trimesh.Trimesh(verts, faces, process=False).face_normals
+    # a fracture plane shows up as many faces sharing one normal
+    _, counts = np.unique(np.round(normals, 2), axis=0, return_counts=True)
+    assert counts.max() > 50
+
+
+def test_grain_mesh_is_watertight():
+    params = {**BASE, "chips": 4, "lumpiness": 0.1, "pits": 3, "taper": 0.2}
+    verts, faces = make_grain(np.random.default_rng(6), params)
+    assert trimesh.Trimesh(verts, faces, process=False).is_watertight

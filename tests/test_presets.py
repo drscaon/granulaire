@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from granulat.presets import CATEGORIES, PRESETS
@@ -39,3 +40,13 @@ def test_mineral_proportions_sum_to_one(key):
 
 def test_every_category_is_used():
     assert {p["category"] for p in PRESETS.values()} == set(CATEGORIES)
+
+
+def test_material_families_have_distinct_shapes():
+    from granulat import generate_scene
+
+    def mean_convexity(key):
+        scene = generate_scene(key, shapes=8, copies=1, seed=3)
+        return np.mean([p["metrics"]["convexity"] for p in scene.prototypes])
+
+    assert mean_convexity("pozzolana") < mean_convexity("dune_sand") - 0.01

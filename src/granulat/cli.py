@@ -20,7 +20,7 @@ from .presets import CATEGORIES, PRESETS
 
 VARIATION_HELP = {
     "size": "diameter from the grading curve (off: d50 for all)",
-    "shape": "elongation and flatness drawn (off: mean values)",
+    "shape": "elongation, flatness and irregularity drawn (off: mean values)",
     "roundness": "facets and edge rounding drawn (off: median values)",
     "mineralogy": "mineral and tint drawn (off: dominant mineral)",
     "orientation": "random orientation (off: all aligned)",

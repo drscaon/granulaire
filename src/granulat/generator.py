@@ -70,11 +70,23 @@ def sample_params(rng, preset, var: Variations):
     lo_p, hi_p = preset["roundness_p"]
     p = float(np.exp(rng.uniform(np.log(lo_p), np.log(hi_p))))
 
+    # irregularity: low-frequency lumps, egg taper, fracture chips, pits
+    lump_lo, lump_hi = preset.get("lumpiness", (0.0, 0.0))
+    lump = rng.uniform(lump_lo, lump_hi)
+    taper_max = preset.get("taper", 0.0)
+    taper = rng.uniform(-taper_max, taper_max)
+    chips_lo, chips_hi = preset.get("chips", (0, 0))
+    chips = int(rng.integers(chips_lo, chips_hi + 1))
+    pits_lo, pits_hi = preset.get("pits", (0, 0))
+    pits = int(rng.integers(pits_lo, pits_hi + 1))
+
     if not var.size:
         phi = preset["phi_mean"]
     if not var.shape:
         elong = _beta_mean(preset["elongation_beta"])
         flat = _beta_mean(preset["flatness_beta"])
+        lump, taper = (lump_lo + lump_hi) / 2, 0.0
+        chips, pits = round((chips_lo + chips_hi) / 2), round((pits_lo + pits_hi) / 2)
     if not var.roundness:
         facets = (preset["facets"][0] + preset["facets"][1]) // 2
         p = float(np.sqrt(lo_p * hi_p))
@@ -87,6 +99,13 @@ def sample_params(rng, preset, var: Variations):
         "facets": facets,
         "roundness_p": p,
         "roughness": preset["roughness"],
+        "lumpiness": lump,
+        "taper": taper,
+        "chips": chips,
+        "chip_depth": preset.get("chip_depth", (0.6, 0.85)),
+        "pits": pits,
+        "pit_depth": preset.get("pit_depth", (0.08, 0.2)),
+        "pit_size": preset.get("pit_size", (0.2, 0.4)),
         "subdivisions": preset["subdivisions"],
         "sphere": preset.get("sphere", False),
     }
@@ -139,9 +158,11 @@ def generate_scene(
 
     rng = np.random.default_rng(seed)
     prototypes = []
-    for _ in range(shapes):
+    for i in range(shapes):
         params = sample_params(rng, preset, var)
-        verts, faces = make_grain(rng, params)
+        # each grain's geometry uses its own stream: the number of chips or pits
+        # of one grain never shifts the draws of the next ones
+        verts, faces = make_grain(np.random.default_rng([seed, 2, i]), params)
         metrics = measure(verts, faces)
         mineral, color = sample_color(rng, preset, var)
         dry = metrics["volume_m3"] * preset["density"]

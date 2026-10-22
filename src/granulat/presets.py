@@ -10,6 +10,10 @@ rather than a single shape:
 - roundness: exponent p of the "soft norm" that rounds edges and corners
   (low p = well rounded, high p = sharp edges);
 - roughness: relative amplitude of the surface noise;
+- irregularity (optional, per grain): lumpiness (amplitude range of
+  low-frequency lumps), taper (max egg asymmetry), chips (range of fracture
+  planes) with chip_depth, pits (range of dents/vesicles) with pit_depth and
+  pit_size;
 - minerals: colours and proportions (rendering), density (mass);
 - absorption: water absorbed by the grain at saturation, as a fraction of its
   dry mass (internal porosity; see granulat/moisture.py);
@@ -36,6 +40,10 @@ PRESETS = {
         "facets": (14, 30),
         "roundness_p": (3.0, 9.0),
         "roughness": 0.012,
+        "lumpiness": (0.03, 0.1),
+        "taper": 0.15,
+        "chips": (0, 2),
+        "chip_depth": (0.75, 0.9),
         "density": 2650.0,  # quartz, kg/m3
         "friction": 0.55,
         "restitution": 0.10,
@@ -59,6 +67,8 @@ PRESETS = {
         "facets": (20, 40),
         "roundness_p": (1.8, 3.5),
         "roughness": 0.008,
+        "lumpiness": (0.02, 0.06),
+        "taper": 0.1,
         "density": 2650.0,
         "friction": 0.50,
         "restitution": 0.10,
@@ -80,6 +90,12 @@ PRESETS = {
         "facets": (10, 22),
         "roundness_p": (6.0, 14.0),  # subangular
         "roughness": 0.015,  # vesicular glass
+        "lumpiness": (0.05, 0.15),
+        "chips": (1, 4),
+        "chip_depth": (0.6, 0.85),
+        "pits": (2, 6),
+        "pit_depth": (0.08, 0.2),
+        "pit_size": (0.25, 0.45),
         "density": 2900.0,  # basaltic glass
         "friction": 0.60,
         "restitution": 0.10,
@@ -103,6 +119,10 @@ PRESETS = {
         "facets": (16, 32),
         "roundness_p": (3.0, 8.0),  # subrounded to rounded
         "roughness": 0.006,
+        "lumpiness": (0.04, 0.12),
+        "taper": 0.2,
+        "chips": (0, 2),
+        "chip_depth": (0.7, 0.9),
         "density": 2650.0,
         "friction": 0.55,
         "restitution": 0.15,
@@ -125,6 +145,9 @@ PRESETS = {
         "facets": (6, 14),
         "roundness_p": (18.0, 45.0),
         "roughness": 0.0,  # micro-roughness belongs in a texture (normal map)
+        "lumpiness": (0.0, 0.04),
+        "chips": (2, 6),
+        "chip_depth": (0.55, 0.85),
         "density": 2700.0,  # limestone / granite
         "friction": 0.65,
         "restitution": 0.15,
@@ -147,6 +170,9 @@ PRESETS = {
         "facets": (8, 16),
         "roundness_p": (10.0, 25.0),  # crushed, edges slightly worn
         "roughness": 0.0,
+        "lumpiness": (0.0, 0.03),
+        "chips": (2, 5),
+        "chip_depth": (0.6, 0.85),
         "density": 2700.0,  # calcite
         "friction": 0.60,
         "restitution": 0.15,
@@ -168,6 +194,12 @@ PRESETS = {
         "facets": (10, 22),
         "roundness_p": (5.0, 12.0),  # subangular scoria
         "roughness": 0.02,  # vesicular surface
+        "lumpiness": (0.08, 0.18),
+        "chips": (0, 2),
+        "chip_depth": (0.65, 0.85),
+        "pits": (4, 10),
+        "pit_depth": (0.08, 0.22),
+        "pit_size": (0.2, 0.4),
         "density": 1400.0,  # apparent grain density, pores included
         "friction": 0.75,
         "restitution": 0.10,
@@ -190,6 +222,10 @@ PRESETS = {
         "facets": (18, 36),
         "roundness_p": (1.5, 3.0),
         "roughness": 0.006,
+        "lumpiness": (0.04, 0.12),
+        "taper": 0.25,
+        "chips": (0, 1),
+        "chip_depth": (0.75, 0.9),
         "density": 2650.0,
         "friction": 0.50,
         "restitution": 0.20,
@@ -213,6 +249,11 @@ PRESETS = {
         "facets": (20, 36),
         "roundness_p": (1.5, 2.5),  # very rounded, polished
         "roughness": 0.004,
+        "lumpiness": (0.03, 0.12),
+        "taper": 0.2,
+        "pits": (0, 2),
+        "pit_depth": (0.05, 0.12),
+        "pit_size": (0.2, 0.35),
         "density": 2600.0,  # flint
         "friction": 0.45,
         "restitution": 0.20,
@@ -236,6 +277,9 @@ PRESETS = {
         "facets": (6, 12),
         "roundness_p": (25.0, 60.0),  # very angular
         "roughness": 0.0,
+        "lumpiness": (0.0, 0.03),
+        "chips": (3, 7),
+        "chip_depth": (0.55, 0.8),
         "density": 2750.0,  # diorite / granite
         "friction": 0.70,
         "restitution": 0.15,
@@ -257,6 +301,12 @@ PRESETS = {
         "facets": (6, 12),
         "roundness_p": (20.0, 50.0),  # crushed, very angular
         "roughness": 0.0,
+        "lumpiness": (0.02, 0.08),
+        "chips": (2, 6),
+        "chip_depth": (0.5, 0.85),
+        "pits": (0, 3),
+        "pit_depth": (0.05, 0.12),
+        "pit_size": (0.15, 0.3),
         "density": 4500.0,  # hematite-rich ore
         "friction": 0.70,
         "restitution": 0.12,
@@ -278,6 +328,9 @@ PRESETS = {
         "facets": (6, 12),
         "roundness_p": (20.0, 50.0),
         "roughness": 0.0,
+        "lumpiness": (0.0, 0.03),
+        "chips": (2, 5),
+        "chip_depth": (0.5, 0.8),
         "density": 1350.0,
         "friction": 0.55,
         "restitution": 0.10,
@@ -300,6 +353,12 @@ PRESETS = {
         "facets": (6, 16),
         "roundness_p": (10.0, 40.0),  # very angular: no water or wind erosion
         "roughness": 0.010,
+        "lumpiness": (0.06, 0.18),
+        "chips": (2, 6),
+        "chip_depth": (0.5, 0.85),
+        "pits": (1, 5),
+        "pit_depth": (0.1, 0.25),
+        "pit_size": (0.2, 0.4),
         "density": 3100.0,  # particle density
         "friction": 0.75,
         "restitution": 0.05,
@@ -323,6 +382,12 @@ PRESETS = {
         "facets": (6, 18),
         "roundness_p": (8.0, 30.0),  # angular, slightly wind-worn
         "roughness": 0.010,
+        "lumpiness": (0.05, 0.14),
+        "chips": (1, 4),
+        "chip_depth": (0.55, 0.85),
+        "pits": (0, 3),
+        "pit_depth": (0.08, 0.2),
+        "pit_size": (0.2, 0.4),
         "density": 2900.0,  # basaltic
         "friction": 0.70,
         "restitution": 0.05,
