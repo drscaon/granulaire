@@ -68,6 +68,15 @@ def _cmd_render_moisture(args) -> int:
     return 0
 
 
+def _cmd_render_gallery(args) -> int:
+    from . import render
+
+    folders = [Path(f) for f in args.folders]
+    out = Path(args.output) if args.output else folders[0].parent / "moisture_gallery.png"
+    print(render.moisture_gallery(folders, out, grains=args.grains))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="granulat", description="Procedural granular materials for simulation.")
     ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -103,6 +112,12 @@ def build_parser() -> argparse.ArgumentParser:
     rm = sub.add_parser("render-moisture", help="one grain per preset in the four moisture states")
     rm.add_argument("folders", nargs="+", help="output folders generated with --moisture")
     rm.set_defaults(func=_cmd_render_moisture)
+
+    rg = sub.add_parser("render-gallery", help="several grains per preset in every moisture state")
+    rg.add_argument("folders", nargs="+", help="output folders written by 'generate'")
+    rg.add_argument("--grains", type=int, default=5, help="grains shown per preset and state")
+    rg.add_argument("--output", help="image path (default: <root>/moisture_gallery.png)")
+    rg.set_defaults(func=_cmd_render_gallery)
     return ap
 
 

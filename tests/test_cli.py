@@ -64,3 +64,6 @@ def test_render(tmp_path):
     for name in ("shape_sheet.png", "mix_preview.png"):
         assert (folder / name).stat().st_size > 0
     assert (tmp_path / "moisture_states.png").stat().st_size > 0
+    gallery = tmp_path / "gallery.png"
+    assert main(["render-gallery", str(folder), "--grains", "2", "--output", str(gallery)]) == 0
+    assert gallery.stat().st_size > 0

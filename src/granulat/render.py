@@ -290,3 +290,87 @@ def moisture_states(folders: list[Path], out: Path) -> Path:
     fig.savefig(out, facecolor="white")
     plt.close(fig)
     return out
+
+
+def moisture_gallery(folders: list[Path], out: Path, grains: int = 5, tile: float = 0.62) -> Path:
+    """Gallery: one row per preset, `grains` different grains shown in each moisture state.
+
+    Each grain is drawn at its own scale (sizes differ by orders of magnitude
+    between presets). Presets without moisture (regoliths) show the dry state only.
+    """
+    from .presets import PRESETS
+
+    plt, PolyCollection = _plt()
+    n_rows, n_states = len(folders), len(STATES)
+    label_w, gap, head_h, row_gap = 2.1, 0.22, 0.55, 0.06
+    width = label_w + n_states * grains * tile + (n_states - 1) * gap + 0.15
+    height = head_h + n_rows * (tile + row_gap) + 0.1
+    fig = plt.figure(figsize=(width, height), dpi=150)
+    fig.patch.set_facecolor("white")
+
+    def box(x_in, y_in, w_in, h_in):
+        return [x_in / width, 1 - (y_in + h_in) / height, w_in / width, h_in / height]
+
+    for c, s in enumerate(STATES):
+        x0 = label_w + c * (grains * tile + gap)
+        fig.text(
+            (x0 + grains * tile / 2) / width,
+            1 - 0.32 / height,
+            LABELS[s],
+            ha="center",
+            va="center",
+            fontsize=11,
+            color=INK,
+            weight="bold",
+        )
+
+    for r, folder in enumerate(folders):
+        summary, data = _load(folder)
+        has_moisture = PRESETS.get(summary["preset"], {}).get("moisture", True)
+        y0 = head_h + r * (tile + row_gap)
+        fig.text(
+            0.12 / width,
+            1 - (y0 + tile / 2) / height,
+            summary["label"],
+            ha="left",
+            va="center",
+            fontsize=9.5,
+            color=INK,
+        )
+        n_shapes = len(data["colors"])
+        picks = np.linspace(0, n_shapes - 1, grains).round().astype(int)
+        views = []
+        for k in picks:
+            v = data[f"v{k}"]
+            axes_ = np.linalg.svd(v - v.mean(axis=0), full_matrices=False)[2]
+            views.append(((v @ axes_.T) @ R_VIEW.T, data[f"f{k}"], data["colors"][k]))
+        for c, s in enumerate(STATES):
+            x0 = label_w + c * (grains * tile + gap)
+            if not has_moisture and s != "dry":
+                if c == 1:
+                    fig.text(
+                        (x0 + 0.1) / width,
+                        1 - (y0 + tile / 2) / height,
+                        "no moisture (no liquid water)",
+                        ha="left",
+                        va="center",
+                        fontsize=8.5,
+                        color=INK2,
+                        style="italic",
+                    )
+                continue
+            for g, (v, f, color) in enumerate(views):
+                ax = fig.add_axes(box(x0 + g * tile, y0, tile, tile))
+                ax.set_axis_off()
+                poly, rgb, depth = shade_mesh(v, f, color, s)
+                order = np.argsort(depth)
+                ax.add_collection(
+                    PolyCollection(poly[order], facecolors=rgb[order], edgecolors="none", antialiased=False)
+                )
+                lim = np.abs(v[:, :2]).max() * 1.1
+                ax.set_xlim(-lim, lim)
+                ax.set_ylim(-lim, lim)
+                ax.set_aspect("equal")
+    fig.savefig(out, facecolor="white")
+    plt.close(fig)
+    return out
