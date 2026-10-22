@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-<p align="center"><strong>Realistic granular materials for physical AI.</strong></p>
+<p align="center"><strong>Realistic granular assets generator for physical AI.</strong></p>
 
 Granulaire generates sand, gravel, pebbles, seeds, pellets and packing peanuts
 with realistic, measured shapes, sizes, masses and moisture, and exports them

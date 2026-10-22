@@ -84,7 +84,8 @@ def _cmd_render_gallery(args) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
-        prog="granulaire", description="Realistic granular materials for physical AI, exported to OpenUSD."
+        prog="granulaire",
+        description="Realistic granular assets generator for physical AI, exporting to OpenUSD.",
     )
     ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = ap.add_subparsers(dest="command", required=True)

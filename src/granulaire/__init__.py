@@ -1,4 +1,4 @@
-"""Granulaire: realistic granular materials for physical AI, exported to OpenUSD."""
+"""Granulaire: realistic granular assets generator for physical AI, exporting to OpenUSD."""
 
 from importlib.metadata import PackageNotFoundError, version
 
