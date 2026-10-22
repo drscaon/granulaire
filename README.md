@@ -268,6 +268,78 @@ Each grain is an implicit volume, meshed with marching cubes:
 4. **Mesh and scale.** Marching cubes on the zero level set, recentring on the
    centre of mass, scaling to the target nominal diameter.
 
+## Friction and restitution
+
+Every grain gets a standard OpenUSD physics material (`UsdPhysicsMaterialAPI`:
+static friction, dynamic friction, restitution), bound to its collision mesh
+with the `physics` purpose. With moisture enabled there is one material per
+state, and each grain's `moisture` variant selects it. The ground has its own
+material (static friction 0.60, restitution 0.10).
+
+### Values
+
+Dynamic friction is 90 % of static friction. In wet states, friction is
+multiplied by 1.10 (damp: a little water makes grains grip), 1.00 (wet) and
+0.80 (saturated: grains slide on the water); restitution by 0.60, 0.40
+and 0.30. The values are realistic orders of magnitude, ranked sensibly
+(angular crushed rock grips more than round, polished or waxy grains), not
+measurements of a specific deposit.
+
+| Preset | Static μ (dry) | Dynamic μ (dry) | Restitution (dry) | Static μ damp | Static μ wet | Static μ saturated |
+|---|---|---|---|---|---|---|
+| `beach_sand` | 0.55 | 0.50 | 0.10 | 0.61 | 0.55 | 0.44 |
+| `dune_sand` | 0.50 | 0.45 | 0.10 | 0.55 | 0.50 | 0.40 |
+| `volcanic_sand` | 0.60 | 0.54 | 0.10 | 0.66 | 0.60 | 0.48 |
+| `rounded_gravel` | 0.55 | 0.50 | 0.15 | 0.61 | 0.55 | 0.44 |
+| `crushed_gravel` | 0.65 | 0.59 | 0.15 | 0.72 | 0.65 | 0.52 |
+| `marble_chips` | 0.60 | 0.54 | 0.15 | 0.66 | 0.60 | 0.48 |
+| `pozzolana` | 0.75 | 0.68 | 0.10 | 0.83 | 0.75 | 0.60 |
+| `river_pebbles` | 0.50 | 0.45 | 0.20 | 0.55 | 0.50 | 0.40 |
+| `beach_pebbles` | 0.40 | 0.36 | 0.25 | 0.44 | 0.40 | 0.32 |
+| `railway_ballast` | 0.70 | 0.63 | 0.15 | 0.77 | 0.70 | 0.56 |
+| `iron_ore` | 0.70 | 0.63 | 0.12 | 0.77 | 0.70 | 0.56 |
+| `coal` | 0.55 | 0.50 | 0.10 | 0.61 | 0.55 | 0.44 |
+| `wheat` | 0.40 | 0.36 | 0.40 | 0.44 | 0.40 | 0.32 |
+| `maize` | 0.45 | 0.41 | 0.35 | 0.50 | 0.45 | 0.36 |
+| `rice` | 0.40 | 0.36 | 0.30 | 0.44 | 0.40 | 0.32 |
+| `beans` | 0.35 | 0.32 | 0.40 | 0.39 | 0.35 | 0.28 |
+| `soybean` | 0.35 | 0.32 | 0.45 | 0.39 | 0.35 | 0.28 |
+| `plastic_pellets` | 0.30 | 0.27 | 0.50 | 0.33 | 0.30 | 0.24 |
+| `wood_pellets` | 0.50 | 0.45 | 0.20 | 0.55 | 0.50 | 0.40 |
+| `packing_peanuts` | 0.50 | 0.45 | 0.30 | — | — | — |
+| `lunar_regolith` | 0.75 | 0.68 | 0.05 | — | — | — |
+| `martian_regolith` | 0.70 | 0.63 | 0.05 | — | — | — |
+| `glass_beads` | 0.35 | 0.32 | 0.85 | 0.39 | 0.35 | 0.28 |
+
+— : no moisture states for this preset. Packing peanuts are deformable: NVIDIA
+OmniPhysics ignores static friction for deformables, so their single value is
+written as both static and dynamic friction.
+
+### Which engines use it
+
+| Tool | Friction and restitution from the USD file |
+|---|---|
+| NVIDIA Isaac Sim / Omniverse (PhysX) | **Used**, including the material selected by each grain's moisture variant. PhysX averages the two materials in contact by default (`physxMaterial:frictionCombineMode` to change it). |
+| Other engines importing `UsdPhysics` (e.g. Newton) | Should be read, as it is the standard schema; not tested here. |
+| Blender | **Not used**: Blender's USD importer does not import physics data. Set friction in the rigid-body panel or with an import script. |
+| MuJoCo, Gazebo, PyBullet | Not native; depends on the converter. MuJoCo combines friction differently (it takes the larger of the two). |
+
+### Limits
+
+- **Friction is per pair of surfaces.** What a robot foot feels also depends on
+  the foot's own material and the engine's combine mode.
+- **No capillary cohesion in simulation.** Wet-grain cohesion is stored in
+  `granulaire:capillaryCohesion`, but OpenUSD has no standard schema for it and
+  no rigid-body engine reads it: in simulation, wet grains differ only by
+  friction, restitution and mass.
+- **No rolling resistance.** Neither `UsdPhysics` nor PhysX rigid bodies model
+  it, which is why piles of spheres flow far too easily. Here the irregular
+  shapes play that role: an angular grain cannot roll.
+- **Calibrate for quantitative work.** For training with domain
+  randomisation, these values are a sensible centre to randomise around; for a
+  quantitative study, calibrate them against the real material, for example
+  with its angle of repose.
+
 ## Physics limits by grain size
 
 Grains are generated at their **real size**. That is right for rendering and

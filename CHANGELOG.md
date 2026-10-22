@@ -22,6 +22,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   below 1 with a clear message; their defaults (100 and 5) are shown in the help.
 
 ### Added
+- README section "Friction and restitution": values per preset and moisture
+  state, which engines use them, and limits (cohesion, rolling resistance).
 - Shuffling is optional: `--no-shuffle` on the command line, `shuffle=False` in
   `generate_scene`, places the copies of each shape side by side. Shapes,
   positions and orientations are unchanged. `summary.json` records `shuffled`.
