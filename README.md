@@ -141,7 +141,7 @@ built on the core `UsdGeom.TetMesh`:
   sim                         TetMesh + OmniPhysicsVolumeDeformableSimAPI
                                       + OmniPhysicsDeformablePoseAPI:custom
                                       + PhysicsCollisionAPI
-/World/Looks/Phys[_<state>]   Material + OmniPhysicsDeformableMaterialAPI
+/World/Looks/Phys             Material + OmniPhysicsDeformableMaterialAPI
                               (Young's modulus, Poisson's ratio, density, friction)
 ```
 
