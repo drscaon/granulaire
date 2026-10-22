@@ -8,7 +8,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [0.2.0b1] - 2026-10-22 (beta)
 
-First public beta, under the new name Granulaire.
+First beta, under the new name Granulaire.
 
 ### Added
 - MIT license.
