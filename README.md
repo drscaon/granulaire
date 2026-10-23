@@ -81,9 +81,13 @@ The README gallery comes from generating every preset with `--moisture`, then
 ```python
 from granulaire import Variations, generate_scene, write_outputs
 
-scene = generate_scene("beach_sand", variations=Variations(moisture=True))  # 100 × 5, shuffled
-small = generate_scene("crushed_gravel", shapes=20, copies=10, shuffle=False, seed=3)
-write_outputs(scene, "output")
+# defaults: 100 shapes × 5 copies, shuffled, seed 1; moisture turned on
+sand = generate_scene("beach_sand", variations=Variations(moisture=True))
+write_outputs(sand, "output")  # -> output/beach_sand/
+
+# 20 shapes × 10 copies, copies side by side, another random draw
+gravel = generate_scene("crushed_gravel", shapes=20, copies=10, shuffle=False, seed=3)
+write_outputs(gravel, "output")  # -> output/crushed_gravel/
 ```
 
 ### Scene size and mixing

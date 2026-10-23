@@ -7,6 +7,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- README: the Python example now writes both scenes it generates.
 - Grains in the OpenUSD scene are spaced from their full reach (bounding
   sphere), so angular grains can no longer start in contact with a neighbour.
 - `mix_preview.png` places grains without overlaps and follows `--no-shuffle`.
