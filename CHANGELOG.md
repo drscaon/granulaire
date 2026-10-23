@@ -6,25 +6,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Changed
-- README: the Python example now writes both scenes it generates.
-- Grains in the OpenUSD scene are spaced from their full reach (bounding
-  sphere), so angular grains can no longer start in contact with a neighbour.
-- `mix_preview.png` places grains without overlaps and follows `--no-shuffle`.
-- README: deformable grains are stated as untested in Isaac Sim.
-- River and beach pebbles now differ in shape and material:
-  - `river_pebbles`: rounder and more equant (mean S/I ~0.71), uniformly
-    smooth, no fracture chips; earthy mix of tan quartzite, grey granite, brown
-    sandstone, buff limestone, green greenstone and red jasper;
-  - `beach_pebbles`: flatter discs and ovals (mean S/I ~0.38), polished, no
-    pits; black, charcoal and blue-grey basalt, white and grey marble, with a
-    higher density (2850 kg/m³), lower absorption and friction.
-  README tables (weight gain, physics limits) and moisture gallery updated.
-- GitHub Actions moved to versions running on Node.js 24 (`actions/checkout@v7`,
-  `actions/setup-python@v7`, `actions/upload-artifact@v7`), removing the
-  Node.js 20 deprecation warnings.
-- `--shapes` and `--copies` (and `shapes=`, `copies=` in Python) reject values
-  below 1 with a clear message; their defaults (100 and 5) are shown in the help.
+## [0.2.0b2] - 2026-10-23 (beta)
+
+Second beta: two new materials (25 in all), distinct river and beach pebbles,
+friction documentation, optional shuffling, and continuous integration.
 
 ### Added
 - `rubber_mulch` preset (Industrial): shredded recycled-tyre nuggets, ~20 mm,
@@ -32,6 +17,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   natural black with dyed nuggets; surface water only.
 - `cherry_tomatoes` preset (Agricultural): ~25 mm glossy fruit with a stem
   scar, deformable (E ≈ 0.5 MPa, ν ≈ 0.45) for NVIDIA OmniPhysics, no moisture.
+- Shuffling is optional: `--no-shuffle` on the command line, `shuffle=False` in
+  `generate_scene`, places the copies of each shape side by side. Shapes,
+  positions and orientations are unchanged. `summary.json` records `shuffled`.
 - `surface_roughness` preset entry: glossy surfaces (fruit skin) in the USD
   materials and the previews.
 - Deformable materials also apply `OmniPhysicsBaseMaterialAPI` (density,
@@ -40,9 +28,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
   deformable grain bounces (starting values, uncalibrated).
 - README section "Friction and restitution": values per preset and moisture
   state, which engines use them, and limits (cohesion, rolling resistance).
-- Shuffling is optional: `--no-shuffle` on the command line, `shuffle=False` in
-  `generate_scene`, places the copies of each shape side by side. Shapes,
-  positions and orientations are unchanged. `summary.json` records `shuffled`.
 - Blender screenshots of gravel and sand in the README ("In Blender").
 - Continuous integration with GitHub Actions: lint, tests on Python 3.10–3.13
   (Linux) and on macOS and Windows, command-line smoke test, package build and
@@ -54,6 +39,28 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - GitHub Flow: changes reach `main` only through pull requests from
   short-lived branches; a versioned `pre-push` hook (`.githooks/`) refuses
   direct pushes to `main`.
+
+### Changed
+- River and beach pebbles now differ in shape and material:
+  - `river_pebbles`: rounder and more equant (mean S/I ~0.71), uniformly
+    smooth, no fracture chips; earthy mix of tan quartzite, grey granite, brown
+    sandstone, buff limestone, green greenstone and red jasper;
+  - `beach_pebbles`: flatter discs and ovals (mean S/I ~0.38), polished, no
+    pits; black, charcoal and blue-grey basalt, white and grey marble, with a
+    higher density (2850 kg/m³), lower absorption and friction.
+  README tables (weight gain, physics limits) and moisture gallery updated.
+- `--shapes` and `--copies` (and `shapes=`, `copies=` in Python) reject values
+  below 1 with a clear message; their defaults (100 and 5) are shown in the help.
+- README: deformable grains are stated as untested in Isaac Sim; the Python
+  example writes both scenes it generates.
+- GitHub Actions moved to versions running on Node.js 24 (`actions/checkout@v7`,
+  `actions/setup-python@v7`, `actions/upload-artifact@v7`), removing the
+  Node.js 20 deprecation warnings.
+
+### Fixed
+- Grains in the OpenUSD scene are spaced from their full reach (bounding
+  sphere), so angular grains can no longer start in contact with a neighbour.
+- `mix_preview.png` places grains without overlaps and follows `--no-shuffle`.
 
 ## [0.2.0b1] - 2026-10-22 (beta)
 
