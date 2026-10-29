@@ -361,7 +361,20 @@ restitution shown is used when they are exported as rigid bodies
 | Blender | **Not used**: Blender's USD importer does not import physics data. Set friction in the rigid-body panel or with an import script. |
 | MuJoCo, Gazebo, PyBullet | Not native; depends on the converter. MuJoCo combines friction differently (it takes the larger of the two). |
 
-### Limits
+### OpenUSD compliance
+
+```bash
+python -m granulaire.validate output/beach_sand
+```
+
+This runs every validator of OpenUSD's `UsdValidation` registry on each file,
+the checks `usdchecker` runs: composition, stage metadata (meters, Z up),
+geometry, material bindings, shaders, UsdPhysics rigid bodies and colliders.
+Each file is checked once per variant (every moisture state), since a variant
+that is not selected is not composed. The tests and CI require no error and no
+warning, on every preset.
+
+## Limits
 
 - **Friction is per pair of surfaces.** What a robot foot feels also depends on
   the foot's own material and the engine's combine mode.
