@@ -8,6 +8,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `granulaire sim-test`: pile test in MuJoCo, built from the OpenUSD file only
+  (collision hulls, masses through the moisture variants, friction, ground);
+  checks mass, finite values, ground, overlap, energy and rest. The MuJoCo
+  model is written next to the report. Extra `sim`.
+- `granulaire blender-test` (and `blender-script`): the same pile test in
+  Blender, through Blender's USD importer; runs with the `bpy` module (extra
+  `blender`, Python 3.13) or with `blender` on the PATH.
+- Both run in scaled units (lengths and gravity by the same factor, masses by
+  another), which leaves the motion unchanged: sand and regolith grains, not
+  usable at real scale, pass too. CI runs both on all 25 presets.
 - `python -m granulaire.validate FILE_OR_FOLDER`: every OpenUSD `UsdValidation` validator
   (what `usdchecker` runs) on each file and each variant; the tests and a CI job
   (every preset) require no error and no warning.

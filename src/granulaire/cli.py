@@ -6,12 +6,18 @@ granulaire generate --preset beach_sand [--shapes 100] [--copies 5] [--no-shuffl
                   [--no-orientation] [--moisture] [--moisture-weights 40,30,20,10]
 granulaire render output/beach_sand output/crushed_gravel
 granulaire render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
+granulaire sim-test output/crushed_gravel [--grains 40]        (MuJoCo, needs [sim])
+granulaire blender-test output/crushed_gravel [--grains 40]    (Blender, needs bpy)
+granulaire blender-script
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 from . import __version__, moisture
@@ -96,6 +102,57 @@ def _cmd_render_gallery(args) -> int:
     return 0
 
 
+def _cmd_sim_test(args) -> int:
+    try:
+        from .sim import mujoco_test
+    except ImportError:
+        print('MuJoCo is needed: pip install "granulaire[sim]"', file=sys.stderr)
+        return 2
+    code = 0
+    for folder in args.folders:
+        report = mujoco_test.run(folder, args.out, args.grains)
+        print(mujoco_test.summary(report))
+        code |= not report["passed"]
+    return code
+
+
+def _blender_script() -> Path:
+    return Path(__file__).parent / "blender" / "pile_test.py"
+
+
+def _cmd_blender_test(args) -> int:
+    forwarded = []
+    if args.grains:
+        forwarded += ["--grains", str(args.grains)]
+    if args.out:
+        forwarded += ["--out", args.out]
+    code = 0
+    for folder in args.folders:
+        try:
+            import bpy  # noqa: F401
+        except ImportError:
+            blender = shutil.which("blender")
+            if blender is None:
+                print(
+                    "Blender is needed: install the bpy module (Python 3.13) or put blender on the PATH, "
+                    f'or run: blender -b -P "{_blender_script()}" -- {folder}',
+                    file=sys.stderr,
+                )
+                return 2
+            cmd = [blender, "-b", "-P", str(_blender_script()), "--", folder, *forwarded]
+            code |= subprocess.call(cmd)
+        else:
+            from .blender import pile_test
+
+            code |= pile_test.main([folder, *forwarded])
+    return code
+
+
+def _cmd_blender_script(_args) -> int:
+    print(_blender_script())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="granulaire",
@@ -155,6 +212,22 @@ def build_parser() -> argparse.ArgumentParser:
     rg.add_argument("--grains", type=int, default=5, help="grains shown per preset and state")
     rg.add_argument("--output", help="image path (default: <root>/moisture_gallery.png)")
     rg.set_defaults(func=_cmd_render_gallery)
+
+    s = sub.add_parser("sim-test", help="pile test in MuJoCo, read back from the OpenUSD file (needs [sim])")
+    s.add_argument("folders", nargs="+", help="output folders written by 'generate'")
+    s.add_argument("--grains", type=_positive_int, default=None, help="test only the first N grains")
+    s.add_argument("--out", default=None, help="report folder (default: <folder>/sim_test)")
+    s.set_defaults(func=_cmd_sim_test)
+
+    b = sub.add_parser("blender-test", help="pile test in Blender, through Blender's USD importer")
+    b.add_argument("folders", nargs="+", help="output folders written by 'generate'")
+    b.add_argument("--grains", type=_positive_int, default=None, help="test only the first N grains")
+    b.add_argument("--out", default=None, help="report folder (default: <folder>/blender_test)")
+    b.set_defaults(func=_cmd_blender_test)
+
+    sub.add_parser(
+        "blender-script", help="print the path of the Blender pile-test script, to run with Blender"
+    ).set_defaults(func=_cmd_blender_script)
     return ap
 
 

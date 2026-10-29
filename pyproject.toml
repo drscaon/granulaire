@@ -29,7 +29,11 @@ dependencies = [
 
 [project.optional-dependencies]
 render = ["matplotlib>=3.7"]
-dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7"]
+# MuJoCo pile test (granulaire sim-test)
+sim = ["mujoco>=3.2"]
+# Blender as a Python module for the Blender pile test: the bpy wheels exist for one Python version only
+blender = ["bpy>=5.1; python_version == '3.13'"]
+dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7", "mujoco>=3.2"]
 
 [project.urls]
 Homepage = "https://github.com/drscaon/granulaire"
