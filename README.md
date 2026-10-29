@@ -56,6 +56,8 @@ From PyPI:
 
 ```bash
 pip install "granulaire[render]"
+pip install "granulaire[sim]"     # MuJoCo pile test
+pip install "granulaire[blender]" # Blender as a Python module (Python 3.13), for the Blender pile test
 ```
 
 From a clone, for development:
@@ -358,8 +360,9 @@ restitution shown is used when they are exported as rigid bodies
 |---|---|
 | NVIDIA Isaac Sim / Omniverse (PhysX) | **Used**, including the material selected by each grain's moisture variant. PhysX averages the two materials in contact by default (`physxMaterial:frictionCombineMode` to change it). |
 | Other engines importing `UsdPhysics` (e.g. Newton) | Should be read, as it is the standard schema; not tested here. |
-| Blender | **Not used**: Blender's USD importer does not import physics data. Set friction in the rigid-body panel or with an import script. |
-| MuJoCo, Gazebo, PyBullet | Not native; depends on the converter. MuJoCo combines friction differently (it takes the larger of the two). |
+| Blender | **Not used by the importer**: Blender's USD importer does not import physics data. `granulaire blender-test` reads it from the file and sets the rigid bodies up (see [Physics checks](#physics-checks)). |
+| MuJoCo | Not native; `granulaire sim-test` builds the MuJoCo model from the file (see [Physics checks](#physics-checks)). MuJoCo combines friction differently (it takes the larger of the two) and has no restitution coefficient. |
+| Gazebo, PyBullet | Not native; depends on the converter. |
 
 ### OpenUSD compliance
 
@@ -374,6 +377,65 @@ Each file is checked once per variant (every moisture state), since a variant
 that is not selected is not composed. The tests and CI require no error and no
 warning, on every preset.
 
+## Physics checks
+
+Every preset is dropped as a pile in **MuJoCo** and in **Blender**, from the
+OpenUSD file only, and must settle:
+
+```bash
+pip install "granulaire[sim]"                 # MuJoCo
+granulaire generate --preset crushed_gravel --shapes 20 --copies 2 --moisture
+granulaire sim-test output/crushed_gravel     # MuJoCo
+granulaire blender-test output/crushed_gravel # Blender (bpy module, Python 3.13, or blender on the PATH)
+```
+
+| Check | Meaning |
+|---|---|
+| `imported` (Blender) | every rigid grain of the file becomes a mesh object through Blender's USD importer |
+| `mass` | the engine's total mass is the sum of the masses in the file (through each grain's moisture variant) |
+| `finite` | no invalid coordinate |
+| `ground` | no grain below the ground by more than a quarter of its thickness |
+| `overlap` | at rest, no grain inside another (MuJoCo: no contact deeper than a quarter of the grain thickness, half during impacts; Blender: no grain's centre inside another's hull) |
+| `energy` | potential + kinetic energy never rises by more than 1 % of the energy released: the engine adds none |
+| `rest` | at the end, the fastest grain moves slower than 5 % of the speed of a fall from its own thickness, and less than 0.1 % of the energy released is left |
+
+The model is built from the file only: each grain's collision mesh (convex
+hull, as the file's `convexHull` approximation asks), mass, friction and
+restitution of its physics material, the ground. Reports are written to
+`<folder>/sim_test/` (with the MuJoCo model, `mujoco_pile.xml`) and
+`<folder>/blender_test/`. CI runs both tests on **all 25 presets**, deformable
+presets as rigid bodies (`--no-deformable`).
+
+**Scaled units.** Engines have absolute tolerances (collision margins, contact
+offsets, minimum masses) set for objects of a few centimetres or more, which
+is why the table [below](#physics-limits-by-grain-size) rates sand as not
+usable as individual rigid bodies at real scale. The tests therefore multiply
+**every length and the gravity by the same factor** (and every mass by
+another): with gravity and frictional contact as the only forces, the motion
+is the same in time as at real scale (same Froude number, same mass ratios,
+same friction and restitution), and only the numbers the engine sees change.
+Grains are run at least 2 cm big in MuJoCo and 10 cm in Blender (Bullet works
+best above ~0.1 m; Blender's USD importer accepts at most ×1000). Do the same
+to simulate fine grains in your own scenes.
+
+**Test settings, not asset properties:**
+
+- MuJoCo: rolling friction of 2 % of the grain thickness. UsdPhysics has no
+  rolling resistance, and without any a rounded pebble rolls forever on a flat
+  floor; granular simulations usually use 0.01–0.1. The file's restitution is
+  not used (MuJoCo contacts are soft).
+- Blender: Bullet multiplies the frictions (and restitutions) of the two
+  bodies in contact, so each body gets the square root of its value (two
+  grains of the same material get exactly the file's value). Convex hulls are
+  reduced to 64 vertices, PhysX's default limit (Bullet otherwise uses every
+  vertex of the mesh). The ground gets a thickness below its surface: a
+  zero-thickness plane is unreliable in Bullet. Blender's default damping
+  (linear 0.04, angular 0.1) is kept.
+
+**Not tested: deformable grains.** Packing peanuts and cherry tomatoes as
+deformable bodies need NVIDIA OmniPhysics (Isaac Sim, an RTX GPU); see
+[Deformable grains](#deformable-grains-packing-peanuts-cherry-tomatoes).
+
 ## Limits
 
 - **Friction is per pair of surfaces.** What a robot foot feels also depends on
@@ -384,7 +446,9 @@ warning, on every preset.
   friction, restitution and mass.
 - **No rolling resistance.** Neither `UsdPhysics` nor PhysX rigid bodies model
   it, which is why piles of spheres flow far too easily. Here the irregular
-  shapes play that role: an angular grain cannot roll.
+  shapes play that role: an angular grain cannot roll. Rounded grains (river
+  pebbles, beads, soybeans, pellets) do roll: add the engine's own rolling
+  resistance when it has one (the MuJoCo test does).
 - **Calibrate for quantitative work.** For training with domain
   randomisation, these values are a sensible centre to randomise around; for a
   quantitative study, calibrate them against the real material, for example
@@ -407,7 +471,7 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 
 | Physics risk | Presets (median nominal size · mean grain mass) | What to do |
 |---|---|---|
-| **Not usable as individual rigid bodies** | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
+| **Not usable as individual rigid bodies at real scale** (fine with scaled units, see [Physics checks](#physics-checks)) | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
 | **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
 | **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g), `rubber_mulch` (20 mm, 12 mm thick · ~6 g), `cherry_tomatoes` (25 mm · ~8 g, deformable) | Same settings as above; check stability against the heaviest body in contact |
 | **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (38 mm, 18 mm thick · ~140 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (46 mm · ~230 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
@@ -503,7 +567,7 @@ GitHub Actions runs these workflows (`.github/workflows/`):
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests and the OpenUSD validators on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
 | `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
 | Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
 

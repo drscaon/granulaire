@@ -59,6 +59,65 @@ jobs:
           python -m granulaire.validate ci-output
 
 
+  sim:
+    name: MuJoCo pile test of every preset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: pip install -e ".[sim]"
+      - name: Pile test of every preset (deformable presets as rigid bodies)
+        run: |
+          for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
+            granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-sim > /dev/null
+          done
+          granulaire sim-test ci-sim/*
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sim-test-reports
+          path: |
+            ci-sim/*/sim_test/sim_test.json
+            ci-sim/*/sim_test/mujoco_pile.xml
+          retention-days: 14
+
+  blender:
+    name: Blender pile test of every preset (bpy, Python 3.13)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: System libraries for the bpy module
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxrender1 libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libsm6 libgl1 libegl1
+      - name: Install
+        run: pip install -e ".[dev,blender]"
+      - name: Blender test
+        run: pytest tests/test_physics.py -v -k blender
+      - name: Pile test of every preset (deformable presets as rigid bodies)
+        run: |
+          for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
+            granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-blender > /dev/null
+          done
+          granulaire blender-test ci-blender/*
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: blender-test-reports
+          path: ci-blender/*/blender_test/blender_test.json
+          retention-days: 14
+
   openusd:
     name: OpenUSD validators of every preset
     runs-on: ubuntu-latest
