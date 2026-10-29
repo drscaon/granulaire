@@ -9,8 +9,10 @@
 
 <p align="center">
   <a href="https://github.com/drscaon/granulaire/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drscaon/granulaire/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://pypi.org/project/granulaire/"><img alt="PyPI" src="https://img.shields.io/pypi/v/granulaire"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776AB">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green">
+  <a href="https://primvaria.com"><img alt="Part of Primvaria" src="https://img.shields.io/badge/suite-Primvaria-0f6e74"></a>
 </p>
 
 Granulaire generates sand, gravel, pebbles, seeds, fruit, pellets, rubber mulch and packing peanuts
@@ -18,9 +20,18 @@ with realistic, measured shapes, sizes, masses and moisture, and exports them
 to **OpenUSD**. It is built for **Physical AI**: robots trained and tested in
 simulation (reinforcement learning, virtual test campaigns, sim-to-real) need
 ground that looks and behaves like the real thing, not perfect spheres, and
-perception models need synthetic images with exact ground truth. Everything
+perception models need synthetic images with exact ground truth. Every preset is
+checked in **MuJoCo** and in **Blender** (a pile of grains, read back from the
+file) and passes OpenUSD's own validators. Everything
 can run on CPU; see [Physics limits by grain size](#physics-limits-by-grain-size)
 for what current engines can simulate.
+
+Granulaire is part of [**Primvaria**](https://primvaria.com), with
+[Maillage](https://github.com/drscaon/maillage) (textiles),
+[Filaire](https://github.com/drscaon/filaire) (cables) and
+[Quincaillerie](https://github.com/drscaon/quincaillerie) (fasteners, cells
+and holders), and follows the same approach: distributions instead of one
+shape, measured outputs, honest limits.
 
 ![Five grains of each preset in the four moisture states](https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/moisture_gallery.png)
 
@@ -45,10 +56,26 @@ Regenerate with `granulaire render-gallery` (see Usage).*
   materials, `UsdPhysics` rigid bodies (mass from volume and density,
   convex-hull collision, friction, restitution) and a collision ground.
 - Optionally gives every grain a moisture state through an OpenUSD variant set.
+- **Tests every preset in MuJoCo and Blender** (`granulaire sim-test`,
+  `granulaire blender-test`): a pile of grains read back from the file falls
+  and must settle; see [Physics checks](#physics-checks).
 - Exports packing peanuts and cherry tomatoes as deformable bodies.
   **Deformable simulation works only with NVIDIA OmniPhysics** (Omniverse,
   Isaac Sim 5+) and is **not tested yet**; see
   [Deformable grains](#deformable-grains-packing-peanuts-cherry-tomatoes).
+
+## Engines
+
+Every file is OpenUSD with standard `UsdPhysics` schemas. Where each engine
+stands, as on the [Primvaria engine matrix](https://primvaria.com/#engines):
+
+| Engine | Status |
+|---|---|
+| OpenUSD validators (`usdchecker`) | **tested**: every preset, every moisture state, in CI |
+| Blender | **tested**: pile test of every preset, through Blender's USD importer (`granulaire blender-test`) |
+| MuJoCo | **tested**: pile test of every preset, model built from the file (`granulaire sim-test`) |
+| NVIDIA Isaac Sim (PhysX) | not tested yet (needs an NVIDIA RTX GPU); standard `UsdPhysics` rigid bodies |
+| NVIDIA OmniPhysics deformables | packing peanuts and cherry tomatoes exported, not simulated yet |
 
 ## Installation
 
@@ -583,4 +610,4 @@ paths, so it displays without the font installed.
 
 ---
 
-Granulaire is part of [**Primvaria**](https://github.com/drscaon/primvaria), physics-ready variability for Physical AI, in OpenUSD: `pip install primvaria` installs the whole suite.
+Granulaire is part of [**Primvaria**](https://primvaria.com), physics-ready variability for Physical AI, in OpenUSD: `pip install primvaria` installs the whole suite ([source](https://github.com/drscaon/primvaria)).
