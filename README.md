@@ -1,7 +1,7 @@
 <h1 align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.svg">
-    <img alt="Granulaire" src="docs/images/logo.svg" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/logo-dark.svg">
+    <img alt="Granulaire" src="https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/logo.svg" width="420">
   </picture>
 </h1>
 
@@ -19,10 +19,10 @@ to **OpenUSD**. It is built for **Physical AI**: robots trained and tested in
 simulation (reinforcement learning, virtual test campaigns, sim-to-real) need
 ground that looks and behaves like the real thing, not perfect spheres, and
 perception models need synthetic images with exact ground truth. Everything
-runs on CPU; see [Physics limits by grain size](#physics-limits-by-grain-size)
+can run on CPU; see [Physics limits by grain size](#physics-limits-by-grain-size)
 for what current engines can simulate.
 
-![Five grains of each preset in the four moisture states](docs/images/moisture_gallery.png)
+![Five grains of each preset in the four moisture states](https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/moisture_gallery.png)
 
 *Five different grains of each of the 25 presets, dry, damp, wet and
 saturated, rendered from the generated meshes. Each grain is drawn at its own
@@ -51,6 +51,14 @@ Regenerate with `granulaire render-gallery` (see Usage).*
   [Deformable grains](#deformable-grains-packing-peanuts-cherry-tomatoes).
 
 ## Installation
+
+From PyPI:
+
+```bash
+pip install "granulaire[render]"
+```
+
+From a clone, for development:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -261,8 +269,8 @@ The `.usdc` scene opens directly in Blender (File > Import > USD).
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/blender_gravel.jpg" alt="Crushed gravel grains imported into Blender, falling onto the floor under rigid-body physics"></td>
-    <td width="50%"><img src="docs/images/blender_sand.jpg" alt="Beach sand grains imported into Blender, small rounded grains in varied mineral colours"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/blender_gravel.jpg" alt="Crushed gravel grains imported into Blender, falling onto the floor under rigid-body physics"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/drscaon/granulaire/main/docs/images/blender_sand.jpg" alt="Beach sand grains imported into Blender, small rounded grains in varied mineral colours"></td>
   </tr>
   <tr>
     <td align="center"><sub>Crushed gravel falling onto the floor (Blender rigid-body physics)</sub></td>
@@ -491,7 +499,11 @@ unchanged code; update the pin and run `ruff format .` together.
 
 ## License
 
-[MIT](LICENSE) © 2026 Daniel Régis Sarmento Caon
+[MIT](https://github.com/drscaon/granulaire/blob/main/LICENSE) © 2026 Daniel Régis Sarmento Caon
 
 The logo is set in IBM Plex Sans (SIL Open Font License 1.1), outlined into
 paths, so it displays without the font installed.
+
+---
+
+Granulaire is part of [**Primvaria**](https://github.com/drscaon/primvaria), physics-ready variability for Physical AI, in OpenUSD: `pip install primvaria` installs the whole suite.
