@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "granulaire"
-version = "0.2.0b2"
+version = "0.2.0b3"
 description = "Realistic granular assets generator for Physical AI: procedural grains with measured shape, mass and moisture, exported to OpenUSD for robot simulation and synthetic perception data."
 readme = "README.md"
 license = "MIT"
