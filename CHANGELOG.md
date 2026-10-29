@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Released on PyPI (`pip install granulaire`) by the release workflow, through Trusted Publishing.
+- README images and links use absolute URLs, so that they show on PyPI; the README links to Primvaria, the suite the project belongs to.
+
 ## [0.2.0b2] - 2026-10-23 (beta)
 
 Second beta: two new materials (25 in all), distinct river and beach pebbles,
