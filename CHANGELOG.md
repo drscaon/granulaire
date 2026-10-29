@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `python -m granulaire.validate FILE_OR_FOLDER`: every OpenUSD `UsdValidation` validator
+  (what `usdchecker` runs) on each file and each variant; the tests and a CI job
+  (every preset) require no error and no warning.
+
 ## [0.2.0b3] - 2026-10-29 (beta)
 
 First release on PyPI.
