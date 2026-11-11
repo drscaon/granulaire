@@ -50,7 +50,7 @@ import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
-from .contract import set_group, write_identity
+from .contract import set_group, write_identity, write_variation
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
@@ -180,8 +180,44 @@ def collision_hull(verts: np.ndarray, max_points: int = HULL_POINTS) -> tuple[np
     return points, tris
 
 
+# drawn per prototype (generator.sample_params and sample_color), in the order they are written
+DRAWN = (
+    "phi",
+    "diameter_m",
+    "elongation",
+    "flatness",
+    "aspect",
+    "lumpiness",
+    "taper",
+    "chips",
+    "pits",
+    "facets",
+    "roundness_p",
+)
+
+
+def drawn_values(proto) -> dict:
+    """What was drawn for a prototype: its shape parameters, its mineral and its colour."""
+    params = proto.get("params", {})
+    values = {name: params[name] for name in DRAWN if name in params}
+    if "aspect" in values:  # the grain's width over thickness, not a variation aspect
+        values["aspect_ratio"] = values.pop("aspect")
+    values["mineral"] = proto.get("mineral")
+    values["color_rgb"] = proto.get("color")
+    return values
+
+
 def export_stage(
-    path, preset, prototypes, instances, ground_size, states=None, deformable=None, preset_key=None, seed=0
+    path,
+    preset,
+    prototypes,
+    instances,
+    ground_size,
+    states=None,
+    deformable=None,
+    preset_key=None,
+    seed=0,
+    aspects=(),
 ):
     """prototypes: list of dicts {verts, faces, color, mineral, mass, metrics,
     moisture: {state: {mass, water_mass, cohesion}}, and for deformables
@@ -190,7 +226,9 @@ def export_stage(
     states: list of exported moisture states, or None (no variant set).
     deformable: the preset's deformable settings, or None for rigid bodies.
     preset_key, seed: the preset's key and the scene's seed, written as each grain's identity
-    (Primvaria contract: kind component, assetInfo, primvaria:* attributes)."""
+    (Primvaria contract: kind component, assetInfo, primvaria:* attributes).
+    aspects: the variations that were switched on; with each prototype's drawn values they are
+    its ground truth (primvaria:variation:*). A grain adds its own drawn moisture state."""
     stage = Usd.Stage.CreateNew(str(path))
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
@@ -238,6 +276,7 @@ def export_stage(
             seed=seed,
             identifier=f"./{Path(path).name}",
         )
+        write_variation(prim, aspects, drawn_values(proto))
         if deformable:
             prim.AddAppliedSchema("OmniPhysicsDeformableBodyAPI")
             prim.CreateAttribute("omniphysics:deformableBodyEnabled", Sdf.ValueTypeNames.Bool).Set(True)
@@ -357,6 +396,7 @@ def export_stage(
         xf.AddOrientOp().Set(Gf.Quatf(float(w), float(x), float(y), float(z)))
         prim.CreateAttribute("granulaire:prototype", Sdf.ValueTypeNames.Int).Set(int(inst["proto"]))
         if states:
+            write_variation(prim, aspects, {"moisture": inst["state"]})
             prim.GetVariantSets().GetVariantSet("moisture").SetVariantSelection(inst["state"])
 
     h = ground_size / 2  # the pile's footprint; the shared ground adds its margin
