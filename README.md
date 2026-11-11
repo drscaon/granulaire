@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://github.com/drscaon/granulaire/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drscaon/granulaire/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://pypi.org/project/granulaire/"><img alt="PyPI" src="https://img.shields.io/pypi/v/granulaire"></a>
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776AB">
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green">
   <a href="https://primvaria.com"><img alt="Part of Primvaria" src="https://img.shields.io/badge/suite-Primvaria-0f6e74"></a>
 </p>
@@ -94,7 +94,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[render]"        # add ",dev" for tests and linting
 ```
 
-Requires Python 3.10+ and `usd-core` 26.5+ (the OpenUSD bindings).
+Requires Python 3.11+ and `usd-core` 26.5+ (the OpenUSD bindings).
 
 Earlier `usd-core` wheels generate the same files, but their OpenUSD
 validators do not load (25.5 ships without the validator
@@ -608,7 +608,7 @@ GitHub Actions runs these workflows (`.github/workflows/`):
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.10–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests and the OpenUSD validators on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests and the OpenUSD validators on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
 | `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
 | Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
 
