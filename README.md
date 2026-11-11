@@ -450,6 +450,12 @@ inherited by each grain that references it. The command above checks the
 stage units, the model hierarchy and this identity; the tests and CI require
 it on every preset.
 
+What was drawn for each grain is in the file too, its ground truth:
+`primvaria:variation:aspects` lists the aspects that were switched on
+(`size`, `shape`, `roundness`, `mineralogy`, `orientation`, `moisture`) and `primvaria:variation:<name>` holds each drawn value
+(`diameter_m`, `elongation`, `flatness`, `facets`, `roundness_p`, `chips`, `pits`, `mineral`, `color_rgb`…). They are written on the prototype; a grain adds its own drawn `moisture` state, and its orientation is its transform. An aspect that is switched off is still recorded, at its
+nominal value, and the other aspects keep their draws.
+
 ## Physics checks
 
 Every preset is dropped as a pile in **MuJoCo** and in **Blender**, from the

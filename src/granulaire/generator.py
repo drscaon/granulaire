@@ -343,6 +343,7 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
         deformable=scene.deformable,
         preset_key=scene.preset_key,
         seed=scene.seed,
+        aspects=[name for name, on in asdict(scene.variations).items() if on],
     )
 
     keys = list(protos[0]["metrics"].keys())
