@@ -24,6 +24,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- MuJoCo 4 (`mujoco>=4.0`, was 3.2) for the `sim` and `dev` extras: the version CI
+  tests; MuJoCo 3 is no longer supported.
 - Rigid grains collide with a separate `collision` mesh (purpose `guide`), their
   convex hull reduced to at most 64 points and scaled back to the full hull's volume,
   instead of the render mesh (up to ~10 000 hull vertices). PhysX caps a hull at 64
