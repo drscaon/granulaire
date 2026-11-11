@@ -6,6 +6,34 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0b1] - 2026-11-13 (beta)
+
+### Breaking changes
+
+- Python 3.11 or later (was 3.10): MuJoCo 4 requires it, and Python 3.10 reached
+  its end of life in October 2026.
+- `usd-core` 26.5 or later (was 24.0): the OpenUSD validators do not load from
+  earlier wheels (25.5 lacks the validator libraries, 25.8 and 25.11 the
+  UsdPreviewSurface definitions), and 24.x has no `UsdValidation` at all. A CI
+  job runs the tests on exactly 26.5.
+- MuJoCo 4 (`mujoco>=4.0`, was 3.2) for the `sim` and `dev` extras; MuJoCo 3 is no
+  longer supported.
+- The ground and physics scene are the same in every Primvaria project (`ground.py`, the
+  same file in each): `/World/PhysicsScene`, gravity 9.81 m/s² along −Z; `/World/Ground`,
+  a 2 cm box (`UsdGeom.Cube`) whose top is z = 0, covering the content with 0.5 m to
+  spare, rendered, no PhysX attributes; `/World/GroundMaterial`, static friction 0.6,
+  dynamic 0.5, restitution 0.1. A test checks every generated file against it.
+  Granulaire's ground was a flat mesh sized to the pile, with its physics material at
+  `/World/Looks/Phys_ground` (friction 0.6/0.54); that prim is gone.
+- Rigid grains collide with a new `collision` child mesh (purpose `guide`, convex hull
+  of at most 64 points, scaled back to the full hull's volume), not with the render
+  mesh, which no longer has `CollisionAPI`. The physics material is bound on the
+  collider; the render mesh keeps the visual one. Tools that read the render mesh
+  as the collider must read `collision` instead. PhysX caps a hull at 64 vertices by
+  default and rebuilt a coarser grain on its own: MuJoCo, Blender and PhysX now collide
+  with the same shape, within 2.4 % of the grain's size of its full hull. The Blender
+  pile test takes the file's collider instead of reducing the render mesh itself.
+
 ### Added
 
 - `granulaire sim-test`: pile test in MuJoCo, built from the OpenUSD file only
@@ -24,28 +52,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- The ground and physics scene shared by every Primvaria project (`ground.py`, the same
-  file in each): `/World/PhysicsScene` with gravity 9.81 m/s² along −Z; `/World/Ground`, a
-  2 cm box whose top is z = 0, covering the content with 0.5 m to spare, rendered, no
-  PhysX attributes; `/World/GroundMaterial`, static friction 0.6, dynamic 0.5, restitution
-  0.1. A test checks every generated file against it. Granulaire's ground was a flat mesh, sized to the pile, with friction 0.6/0.54;
-  the MuJoCo and Blender pile tests read the box now.
-- Python 3.11 or later (was 3.10): MuJoCo 4 requires it, and Python 3.10 reached
-  its end of life in October 2026. CI tests 3.11 to 3.13.
-- MuJoCo 4 (`mujoco>=4.0`, was 3.2) for the `sim` and `dev` extras: the version CI
-  tests; MuJoCo 3 is no longer supported.
-- Rigid grains collide with a separate `collision` mesh (purpose `guide`), their
-  convex hull reduced to at most 64 points and scaled back to the full hull's volume,
-  instead of the render mesh (up to ~10 000 hull vertices). PhysX caps a hull at 64
-  vertices by default and would have rebuilt a coarser grain on its own: MuJoCo,
-  Blender and PhysX now collide with the same shape, within 2.4 % of the grain's size
-  of its full hull. The physics material is bound on the collider; the render mesh
-  keeps the visual one. The Blender pile test takes the file's collider instead of
-  reducing the render mesh itself.
-- `usd-core` 26.5 or later (was 24.0): the OpenUSD validators do not load from
-  earlier wheels (25.5 lacks the validator libraries, 25.8 and 25.11 the
-  UsdPreviewSurface definitions), and 24.x has no `UsdValidation` at all. A CI
-  job runs the tests on exactly 26.5.
 - README: the same header as the other Primvaria projects (PyPI and suite
   badges), an Engines table matching the suite's engine matrix, and links to
   primvaria.com.
