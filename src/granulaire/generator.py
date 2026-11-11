@@ -341,6 +341,8 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
         ground_size=4 * scene.side * scene.spacing,
         states=states,
         deformable=scene.deformable,
+        preset_key=scene.preset_key,
+        seed=scene.seed,
     )
 
     keys = list(protos[0]["metrics"].keys())

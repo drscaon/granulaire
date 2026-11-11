@@ -137,6 +137,8 @@ jobs:
           done
       - name: Validate every file (what usdchecker runs)
         run: python -m granulaire.validate ci-usd
+      - name: Check every file against the Primvaria contract
+        run: python -m granulaire.conformance ci-usd
 
   usd-floor:
     name: Oldest supported OpenUSD (usd-core 26.5)

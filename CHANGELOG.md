@@ -6,6 +6,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Primvaria OpenUSD contract, version 0
+  ([docs/contract.md](https://github.com/drscaon/primvaria/blob/main/docs/contract.md)):
+  every grain is a model of kind `component` with `assetInfo` (name,
+  identifier, version) and the attributes `primvaria:contract`,
+  `primvaria:generator`, `primvaria:version`, `primvaria:preset` and
+  `primvaria:seed`; `/World` is an `assembly`, `/World/Grains` and
+  `/World/Prototypes` are groups.
+- `python -m granulaire.conformance`: checks files against the contract (stage
+  units, model hierarchy, identity). Run in the tests and, in CI, on every
+  preset.
+
 ## [0.3.0b1] - 2026-11-11 (beta)
 
 ### Breaking changes

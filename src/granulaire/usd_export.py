@@ -43,11 +43,14 @@ OpenUSD for any tool, and engines that know the schema simulate it.
                                + PhysxDeformableMaterialAPI (elasticity damping)
 """
 
+from pathlib import Path
+
 import numpy as np
 import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
+from .contract import set_group, write_identity
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
@@ -177,13 +180,17 @@ def collision_hull(verts: np.ndarray, max_points: int = HULL_POINTS) -> tuple[np
     return points, tris
 
 
-def export_stage(path, preset, prototypes, instances, ground_size, states=None, deformable=None):
+def export_stage(
+    path, preset, prototypes, instances, ground_size, states=None, deformable=None, preset_key=None, seed=0
+):
     """prototypes: list of dicts {verts, faces, color, mineral, mass, metrics,
     moisture: {state: {mass, water_mass, cohesion}}, and for deformables
     tet_points, tets}
     instances: list of dicts {proto, position, orient (w, x, y, z), state}
     states: list of exported moisture states, or None (no variant set).
-    deformable: the preset's deformable settings, or None for rigid bodies."""
+    deformable: the preset's deformable settings, or None for rigid bodies.
+    preset_key, seed: the preset's key and the scene's seed, written as each grain's identity
+    (Primvaria contract: kind component, assetInfo, primvaria:* attributes)."""
     stage = Usd.Stage.CreateNew(str(path))
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
@@ -192,6 +199,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
     world = UsdGeom.Xform.Define(stage, "/World")
     stage.SetDefaultPrim(world.GetPrim())
     world.GetPrim().SetCustomDataByKey("granulaire:preset", preset["label"])
+    set_group(world.GetPrim(), assembly=True)
     physics_scene(stage)
     UsdGeom.Scope.Define(stage, "/World/Looks")
 
@@ -219,10 +227,17 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
     else:
         phys = {None: phys_material("/World/Looks/Phys", None)}
 
-    stage.CreateClassPrim("/World/Prototypes")
+    set_group(stage.CreateClassPrim("/World/Prototypes"))
     for i, proto in enumerate(prototypes):
         root_path = f"/World/Prototypes/Grain_{i:03d}"
         prim = UsdGeom.Xform.Define(stage, root_path).GetPrim()
+        write_identity(
+            prim,
+            name=f"Grain_{i:03d}",
+            preset=preset_key or preset["label"],
+            seed=seed,
+            identifier=f"./{Path(path).name}",
+        )
         if deformable:
             prim.AddAppliedSchema("OmniPhysicsDeformableBodyAPI")
             prim.CreateAttribute("omniphysics:deformableBodyEnabled", Sdf.ValueTypeNames.Bool).Set(True)
@@ -331,7 +346,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
                 bind(mats[s], phys[s])
         vset.SetVariantSelection(states[0])
 
-    UsdGeom.Xform.Define(stage, "/World/Grains")
+    set_group(UsdGeom.Xform.Define(stage, "/World/Grains").GetPrim())
     for j, inst in enumerate(instances):
         p = f"/World/Grains/g_{j:04d}"
         xf = UsdGeom.Xform.Define(stage, p)

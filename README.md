@@ -432,6 +432,24 @@ Each file is checked once per variant (every moisture state), since a variant
 that is not selected is not composed. The tests and CI require no error and no
 warning, on every preset.
 
+### Primvaria contract
+
+```bash
+python -m granulaire.conformance output/beach_sand
+```
+
+Granulaire is part of [Primvaria](https://primvaria.com) and follows its
+[mission](https://github.com/drscaon/primvaria/blob/main/MISSION.md) and its
+[OpenUSD contract](https://github.com/drscaon/primvaria/blob/main/docs/contract.md),
+version 0, which the four generators share. Every grain is an asset any tool
+can find without knowing Granulaire: a model of kind `component` (under
+`/World`, an `assembly`) with `assetInfo` (name, identifier, version) and the
+attributes `primvaria:contract`, `primvaria:generator`, `primvaria:version`,
+`primvaria:preset` and `primvaria:seed`, written on the prototype and
+inherited by each grain that references it. The command above checks the
+stage units, the model hierarchy and this identity; the tests and CI require
+it on every preset.
+
 ## Physics checks
 
 Every preset is dropped as a pile in **MuJoCo** and in **Blender**, from the
@@ -624,7 +642,7 @@ GitHub Actions runs these workflows (`.github/workflows/`):
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests and the OpenUSD validators on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests, the OpenUSD validators and the Primvaria contract check on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
 | `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
 | Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
 
