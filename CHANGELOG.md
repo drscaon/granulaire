@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Breaking changes
+
+- The stage no longer carries the preset's label as custom data on `/World`
+  (`granulaire:preset`): each grain names its preset in `primvaria:preset`
+  (Primvaria contract).
+
 ### Added
 
 - Ground truth of the variation, in the file (Primvaria contract, variation

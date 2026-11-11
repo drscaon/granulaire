@@ -236,7 +236,6 @@ def export_stage(
 
     world = UsdGeom.Xform.Define(stage, "/World")
     stage.SetDefaultPrim(world.GetPrim())
-    world.GetPrim().SetCustomDataByKey("granulaire:preset", preset["label"])
     set_group(world.GetPrim(), assembly=True)
     physics_scene(stage)
     UsdGeom.Scope.Define(stage, "/World/Looks")
