@@ -24,6 +24,8 @@ from pathlib import Path
 import numpy as np
 from pxr import Usd, UsdGeom, UsdPhysics, UsdShade
 
+from ..ground import read_ground
+
 G = 9.81  # m/s²
 
 
@@ -139,11 +141,10 @@ def read_scene(path, grains: int | None = None) -> Scene:
         )
         if grains is not None and len(out) >= grains:
             break
-    ground = stage.GetPrimAtPath("/World/Ground")
-    gpts = np.array(UsdGeom.Mesh(ground).GetPointsAttr().Get(), float)
-    gmu, ge = _material(ground)
+    g = read_ground(stage)
+    half = float(max(abs(v) for v in (*g["lo"], *g["hi"])))
     preset = usd.stem.removeprefix("granulaire_")
-    return Scene(usd, preset, out, deformable, float(np.abs(gpts[:, :2]).max()), gmu, ge)
+    return Scene(usd, preset, out, deformable, half, g["dynamic_friction"], g["restitution"])
 
 
 def scale_units(scene: Scene, target_size: float, target_mass: float) -> Scene:

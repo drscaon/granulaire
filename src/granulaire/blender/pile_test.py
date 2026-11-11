@@ -64,6 +64,17 @@ import bpy
 import numpy as np
 from pxr import Usd, UsdGeom, UsdPhysics, UsdShade
 
+try:
+    from ..ground import read_ground
+except ImportError:  # run as a script inside Blender (blender -b -P pile_test.py): load it by path
+    import importlib.util
+
+    _here = Path(__file__).parents[1] / "ground.py"
+    _spec = importlib.util.spec_from_file_location("granulaire_ground", _here)
+    _ground = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_ground)
+    read_ground = _ground.read_ground
+
 G = 9.81
 TARGET_SIZE = 0.1  # m: grains are run at least this big
 TARGET_MASS = 0.05  # kg
@@ -75,7 +86,6 @@ ENERGY_TOL = 0.01  # of the energy released
 REST_SPEED = 0.05  # of sqrt(2 g thickness)
 REST_ENERGY = 1e-3  # of the energy released
 FPS = 24
-HULL_VERTICES = 64  # PhysX's default limit for a convex hull
 
 
 # ----------------------------------------------------------------- inputs
@@ -123,7 +133,8 @@ def read_grains(usd: Path, limit=None):
             continue
         proto = int(prim.GetAttribute("granulaire:prototype").Get() or 0)
         if proto not in thick:
-            thick[proto] = _thickness(np.array(UsdGeom.Mesh(geom).GetPointsAttr().Get(), float))
+            pts = np.array(UsdGeom.Mesh(geom).GetPointsAttr().Get(), float)
+            thick[proto] = (_thickness(pts), pts)
         mu, e = _material(geom)
         grains.append(
             {
@@ -133,13 +144,14 @@ def read_grains(usd: Path, limit=None):
                 "friction": mu,
                 "restitution": e,
                 "size": float(prim.GetAttribute("granulaire:diameterNominal").Get()),
-                "thickness": thick[proto],
+                "thickness": thick[proto][0],
+                "hull": thick[proto][1],  # the collider's points, in the grain's frame
             }
         )
         if limit and len(grains) >= limit:
             break
-    ground = stage.GetPrimAtPath("/World/Ground")
-    return grains, deformable, _material(ground)
+    g = read_ground(stage)
+    return grains, deformable, (g["dynamic_friction"], g["restitution"])
 
 
 # -------------------------------------------------------------- the scene
@@ -167,29 +179,14 @@ def hull_planes(o):
     return n, d
 
 
-def _spread(points, n):
-    """n of the points, each as far as possible from those already chosen."""
-    if len(points) <= n:
-        return points
-    chosen = [int(np.argmax(np.linalg.norm(points - points.mean(axis=0), axis=1)))]
-    d = np.linalg.norm(points - points[chosen[0]], axis=1)
-    for _ in range(n - 1):
-        chosen.append(int(np.argmax(d)))
-        d = np.minimum(d, np.linalg.norm(points - points[chosen[-1]], axis=1))
-    return points[chosen]
-
-
-def to_hull(o, max_vertices=HULL_VERTICES):
-    """Replace the object's mesh by its convex hull (the file's ``convexHull``
-    collision approximation), reduced to at most ``max_vertices`` vertices as
-    PhysX does by default: Bullet uses every point it is given."""
+def to_hull(o, points):
+    """Replace the object's mesh by the convex hull of the file's collider (``points``, in the
+    object's frame): the hull of at most 64 points the file gives every engine, which Bullet
+    then uses as is."""
     import bmesh  # importable once bpy is loaded
 
-    co = np.empty(len(o.data.vertices) * 3)
-    o.data.vertices.foreach_get("co", co)
-    pts = _spread(co.reshape(-1, 3), max_vertices)
     bm = bmesh.new()
-    verts = [bm.verts.new(p) for p in pts]
+    verts = [bm.verts.new(p) for p in points]
     res = bmesh.ops.convex_hull(bm, input=verts)
     bmesh.ops.delete(bm, geom=list(set(res["geom_interior"]) | set(res["geom_unused"])), context="VERTS")
     bm.to_mesh(o.data)
@@ -197,20 +194,16 @@ def to_hull(o, max_vertices=HULL_VERTICES):
 
 
 def to_slab(o):
-    """Give the ground a thickness below its surface (half its width): a
-    zero-thickness plane is unreliable in Bullet, small fast grains pass
-    through it. The top surface stays where the file puts it."""
-    import bmesh  # importable once bpy is loaded
-
-    bm = bmesh.new()
-    bm.from_mesh(o.data)
-    width = max(v.co.x for v in bm.verts) - min(v.co.x for v in bm.verts)
-    res = bmesh.ops.extrude_face_region(bm, geom=bm.faces[:])
-    moved = [e for e in res["geom"] if isinstance(e, bmesh.types.BMVert)]
-    bmesh.ops.translate(bm, verts=moved, vec=(0.0, 0.0, -0.5 * width))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bm.to_mesh(o.data)
-    bm.free()
+    """Thicken the ground below its top face to half its width: the file's 2 cm box is thin
+    once the scene runs in scaled units, and small fast grains could pass through it in
+    Bullet. The top face stays where the file puts it."""
+    v = o.data.vertices
+    top = max(p.co.z for p in v)
+    width = max(p.co.x for p in v) - min(p.co.x for p in v)
+    for p in v:
+        if p.co.z < top - 1e-12:
+            p.co.z = top - 0.5 * width
+    o.data.update()
 
 
 def run(target, out_dir=None, grains=None) -> dict:
@@ -278,8 +271,8 @@ def run(target, out_dir=None, grains=None) -> dict:
         o.select_set(True)
     bpy.context.view_layer.objects.active = bodies[0]
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    for _, o in objs:
-        to_hull(o)
+    for g, o in objs:
+        to_hull(o, g["hull"] * k)  # the import scale, now applied to the mesh
     bpy.ops.object.select_all(action="DESELECT")
     for _, o in objs:
         o.select_set(True)

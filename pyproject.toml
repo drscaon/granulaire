@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "granulaire"
-version = "0.2.0b3"
+version = "0.3.0b1"
 description = "Realistic granular assets generator for Physical AI: procedural grains with measured shape, mass and moisture, exported to OpenUSD for robot simulation and synthetic perception data."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Daniel Régis Sarmento Caon" }]
 keywords = ["granular", "simulation", "openusd", "procedural", "robotics", "physical-ai", "synthetic-data", "robot-learning", "primvaria"]
 classifiers = [
@@ -24,16 +24,16 @@ dependencies = [
     "scipy>=1.10",
     "scikit-image>=0.21",
     "trimesh>=4.0",
-    "usd-core>=24.0",
+    "usd-core>=26.5",  # the OpenUSD validators load from 26.5 on (see README)
 ]
 
 [project.optional-dependencies]
 render = ["matplotlib>=3.7"]
 # MuJoCo pile test (granulaire sim-test)
-sim = ["mujoco>=3.2"]
+sim = ["mujoco>=4.0"]
 # Blender as a Python module for the Blender pile test: the bpy wheels exist for one Python version only
 blender = ["bpy>=5.1; python_version == '3.13'"]
-dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7", "mujoco>=3.2"]
+dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7", "mujoco>=4.0"]
 
 [project.urls]
 Homepage = "https://github.com/drscaon/granulaire"
@@ -57,7 +57,7 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 110
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
