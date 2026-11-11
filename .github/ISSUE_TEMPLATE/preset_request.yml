@@ -1,5 +1,5 @@
-name: Material preset request
-description: Ask for a new granular material: a sediment, a seed, a pellet
+name: "Material preset request"
+description: "Ask for a new granular material: a sediment, a seed, a pellet"
 labels: [preset-request]
 body:
   - type: markdown
