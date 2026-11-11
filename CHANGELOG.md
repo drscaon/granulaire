@@ -8,6 +8,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `CONTRIBUTING.md`, issue templates (bug report, material preset request),
+  `SECURITY.md` and `CITATION.cff`.
 - Primvaria OpenUSD contract, version 0
   ([docs/contract.md](https://github.com/drscaon/primvaria/blob/main/docs/contract.md)):
   every grain is a model of kind `component` with `assetInfo` (name,
