@@ -24,6 +24,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Rigid grains collide with a separate `collision` mesh (purpose `guide`), their
+  convex hull reduced to at most 64 points and scaled back to the full hull's volume,
+  instead of the render mesh (up to ~10 000 hull vertices). PhysX caps a hull at 64
+  vertices by default and would have rebuilt a coarser grain on its own: MuJoCo,
+  Blender and PhysX now collide with the same shape, within 2.4 % of the grain's size
+  of its full hull. The physics material is bound on the collider; the render mesh
+  keeps the visual one. The Blender pile test takes the file's collider instead of
+  reducing the render mesh itself.
+- `usd-core` 26.5 or later (was 24.0): the OpenUSD validators do not load from
+  earlier wheels (25.5 lacks the validator libraries, 25.8 and 25.11 the
+  UsdPreviewSurface definitions), and 24.x has no `UsdValidation` at all. A CI
+  job runs the tests on exactly 26.5.
 - README: the same header as the other Primvaria projects (PyPI and suite
   badges), an Engines table matching the suite's engine matrix, and links to
   primvaria.com.

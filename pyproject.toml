@@ -24,7 +24,7 @@ dependencies = [
     "scipy>=1.10",
     "scikit-image>=0.21",
     "trimesh>=4.0",
-    "usd-core>=24.0",
+    "usd-core>=26.5",  # the OpenUSD validators load from 26.5 on (see README)
 ]
 
 [project.optional-dependencies]

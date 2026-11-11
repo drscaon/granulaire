@@ -11,7 +11,9 @@ Scene layout (units: metres, kilograms, Z up):
       variantSet "moisture"    (when enabled) dry | damp | wet | saturated:
                                mass, granulaire:waterMass,
                                granulaire:capillaryCohesion, bound materials
-      /geom                    Mesh + Collision (convex hull)
+      /geom                    render Mesh
+      /collision               convex hull of the grain, at most 64 points
+                               (purpose guide), CollisionAPI, convexHull
   /Grains
     /g_0000 ...                internal reference to a prototype, with its own
                                position, orientation and moisture state
@@ -43,6 +45,7 @@ OpenUSD for any tool, and engines that know the schema simulate it.
 import numpy as np
 import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
+from scipy.spatial import ConvexHull
 
 from .moisture import STATE_PARAMS, wet_color
 
@@ -127,10 +130,49 @@ def _make_tet_mesh(stage, path, points, tets):
     return tet
 
 
-def _bind(geom_prim, visual, physics):
-    api = UsdShade.MaterialBindingAPI(geom_prim)
-    api.Bind(visual)
-    api.Bind(physics, UsdShade.Tokens.weakerThanDescendants, "physics")
+HULL_POINTS = 64  # PhysX's default hull vertex limit (physxConvexHullCollision:hullVertexLimit)
+# first points of a reduced hull: the extremes along the axes and the diagonals
+_SEED_DIRS = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 1], [1, 1, -1], [1, -1, 1], [-1, 1, 1]], float)
+
+
+def collision_hull(verts: np.ndarray, max_points: int = HULL_POINTS) -> tuple[np.ndarray, np.ndarray]:
+    """The grain's convex hull with at most ``max_points`` vertices, so that every engine collides
+    with the same shape (PhysX would otherwise rebuild a hull of 64 vertices on its own, MuJoCo and
+    Blender keep them all). Greedy: from the extreme points along the axes and the diagonals, add
+    the hull vertex farthest outside the current hull until the budget is spent. The result lies
+    inside the true hull; it is then scaled about its centroid to the true hull's volume, so the
+    grains pack as densely and engines that take inertia from the collider get it right. Returns
+    (points, triangles)."""
+    pts = np.asarray(verts, float)
+    cand = pts[ConvexHull(pts).vertices]
+    if len(cand) <= max_points:
+        chosen = list(range(len(cand)))
+    else:
+        c = cand - cand.mean(axis=0)
+        chosen = sorted({int(i) for d in _SEED_DIRS for i in ((c @ d).argmax(), (c @ d).argmin())})
+        while len(chosen) < max_points:
+            eq = ConvexHull(cand[chosen]).equations
+            dist = (cand @ eq[:, :3].T + eq[:, 3]).max(axis=1)  # how far outside the current hull
+            dist[chosen] = -np.inf
+            k = int(dist.argmax())
+            if dist[k] <= 0:
+                break
+            chosen.append(k)
+    sub = cand[chosen]
+    hull = ConvexHull(sub)
+    used = np.unique(hull.simplices)
+    remap = np.full(len(sub), -1)
+    remap[used] = np.arange(len(used))
+    points, tris = sub[used], remap[hull.simplices]
+    if len(cand) > max_points:  # back to the true volume
+        centre = points.mean(axis=0)
+        points = centre + (points - centre) * (ConvexHull(cand).volume / hull.volume) ** (1 / 3)
+    # outward winding: counter-clockwise seen from outside (right-handed)
+    p = points[tris]
+    normal = np.cross(p[:, 1] - p[:, 0], p[:, 2] - p[:, 0])
+    flip = (normal * (p.mean(axis=1) - points.mean(axis=0))).sum(axis=1) < 0
+    tris[flip] = tris[flip][:, ::-1]
+    return points, tris
 
 
 def export_stage(path, preset, prototypes, instances, ground_size, states=None, deformable=None):
@@ -218,14 +260,25 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
             _set_bind_pose(mesh.GetPrim(), verts)
             _make_tet_mesh(stage, root_path + "/sim", proto["tet_points"], proto["tets"])
         else:
-            UsdPhysics.CollisionAPI.Apply(mesh.GetPrim())
-            UsdPhysics.MeshCollisionAPI.Apply(mesh.GetPrim()).CreateApproximationAttr(
+            # the collider: a reduced convex hull, not the render mesh (see collision_hull)
+            hp, ht = collision_hull(verts)
+            col = UsdGeom.Mesh.Define(stage, root_path + "/collision")
+            col.CreatePointsAttr(Vt.Vec3fArray.FromNumpy(hp.astype(np.float32)))
+            col.CreateFaceVertexCountsAttr(Vt.IntArray([3] * len(ht)))
+            col.CreateFaceVertexIndicesAttr(Vt.IntArray.FromNumpy(ht.astype(np.int32).ravel()))
+            col.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+            col.CreateExtentAttr([Gf.Vec3f(*hp.min(axis=0)), Gf.Vec3f(*hp.max(axis=0))])
+            col.CreatePurposeAttr(UsdGeom.Tokens.guide)
+            UsdPhysics.CollisionAPI.Apply(col.GetPrim())
+            UsdPhysics.MeshCollisionAPI.Apply(col.GetPrim()).CreateApproximationAttr(
                 UsdPhysics.Tokens.convexHull
             )
+            UsdShade.MaterialBindingAPI.Apply(col.GetPrim())
 
         geom_prim = mesh.GetPrim()
+        col_prim = None if deformable else stage.GetPrimAtPath(root_path + "/collision")
 
-        def bind(visual, physics, geom=geom_prim, root=prim):
+        def bind(visual, physics, geom=geom_prim, root=prim, col=col_prim):
             if deformable:
                 # visual material on the render mesh, physics material on the body root
                 UsdShade.MaterialBindingAPI(geom).Bind(visual)
@@ -233,7 +286,10 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
                     physics, UsdShade.Tokens.weakerThanDescendants, "physics"
                 )
             else:
-                _bind(geom, visual, physics)
+                UsdShade.MaterialBindingAPI(geom).Bind(visual)
+                UsdShade.MaterialBindingAPI(col).Bind(
+                    physics, UsdShade.Tokens.weakerThanDescendants, "physics"
+                )
 
         if not states:
             mass_attr.Set(float(proto["mass"]))

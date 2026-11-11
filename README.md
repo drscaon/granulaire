@@ -94,7 +94,12 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[render]"        # add ",dev" for tests and linting
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+ and `usd-core` 26.5+ (the OpenUSD bindings).
+
+Earlier `usd-core` wheels generate the same files, but their OpenUSD
+validators do not load (25.5 ships without the validator
+libraries, 25.8 and 25.11 without the UsdPreviewSurface definitions), and CI
+tests both 26.5 and the newest release.
 
 ## Usage
 
@@ -327,6 +332,13 @@ Each grain is an implicit volume, meshed with marching cubes:
    roughness.
 4. **Mesh and scale.** Marching cubes on the zero level set, recentring on the
    centre of mass, scaling to the target nominal diameter.
+5. **Collider.** A separate `collision` mesh (purpose `guide`): the grain's
+   convex hull reduced to at most 64 points, PhysX's default hull vertex limit,
+   by adding the point farthest outside the hull so far, then scaled to the full
+   hull's volume. Every engine collides with this same shape: PhysX would
+   otherwise rebuild a 64-vertex hull on its own, while MuJoCo and Bullet keep
+   every vertex. Over all presets the collider stays within 2.4 % of the grain's
+   size of its full hull (median 1.5 %), with the same volume.
 
 ## Friction and restitution
 
@@ -426,8 +438,9 @@ granulaire blender-test output/crushed_gravel # Blender (bpy module, Python 3.13
 | `energy` | potential + kinetic energy never rises by more than 1 % of the energy released: the engine adds none |
 | `rest` | at the end, the fastest grain moves slower than 5 % of the speed of a fall from its own thickness, and less than 0.1 % of the energy released is left |
 
-The model is built from the file only: each grain's collision mesh (convex
-hull, as the file's `convexHull` approximation asks), mass, friction and
+The model is built from the file only: each grain's collision mesh (its
+convex hull of at most 64 points, as the file's `convexHull` approximation
+asks), mass, friction and
 restitution of its physics material, the ground. Reports are written to
 `<folder>/sim_test/` (with the MuJoCo model, `mujoco_pile.xml`) and
 `<folder>/blender_test/`. CI runs both tests on **all 25 presets**, deformable
@@ -453,9 +466,9 @@ to simulate fine grains in your own scenes.
   not used (MuJoCo contacts are soft).
 - Blender: Bullet multiplies the frictions (and restitutions) of the two
   bodies in contact, so each body gets the square root of its value (two
-  grains of the same material get exactly the file's value). Convex hulls are
-  reduced to 64 vertices, PhysX's default limit (Bullet otherwise uses every
-  vertex of the mesh). The ground gets a thickness below its surface: a
+  grains of the same material get exactly the file's value). Each grain
+  collides with the file's collider (64 points at most), not with its render
+  mesh. The ground gets a thickness below its surface: a
   zero-thickness plane is unreliable in Bullet. Blender's default damping
   (linear 0.04, angular 0.1) is kept.
 
@@ -529,8 +542,9 @@ the gravel and pebble presets.
   hundred grains; instancing is for rendering surfaces.
 - **Angularity is a proxy**, not Wadell roundness, and is only comparable
   between grains of the same mesh resolution.
-- **Collision uses the convex hull** for rigid grains. Pits, creases and dents
-  are visible but not part of the collision shape; hollow shells (whole
+- **Collision uses a convex hull of 64 points** for rigid grains, within 2.4 %
+  of the grain's size of its full hull. Pits, creases and dents are visible
+  but not part of the collision shape; hollow shells (whole
   seashells) are not generated. Deformable grains collide with their
   tetrahedral mesh.
 - **Deformables work only with NVIDIA OmniPhysics, untested.** Until OpenUSD

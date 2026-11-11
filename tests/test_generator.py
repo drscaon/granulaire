@@ -84,7 +84,8 @@ def test_usd_moisture_variants_are_consistent(tmp_path):
         assert UsdPhysics.MassAPI(prim).GetMassAttr().Get() == pytest.approx(expected, rel=1e-6)
         geom = prim.GetChild("geom")
         assert UsdShade.MaterialBindingAPI(geom).ComputeBoundMaterial()[0].GetPath().name.endswith(state)
-        physics = UsdShade.MaterialBindingAPI(geom).ComputeBoundMaterial("physics")[0]
+        collision = prim.GetChild("collision")
+        physics = UsdShade.MaterialBindingAPI(collision).ComputeBoundMaterial("physics")[0]
         assert physics.GetPath().name == f"Phys_{state}"
 
     # switching a grain's variant changes its mass without regenerating
@@ -176,3 +177,29 @@ def test_water_repellent_grains_have_no_moisture_states(key, tmp_path):
     stage = Usd.Stage.Open(str(folder / f"granulaire_{key}.usdc"))
     prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
     assert not prim.GetVariantSets().HasVariantSet("moisture")
+
+
+def test_rigid_grains_collide_with_a_64_point_hull(tmp_path):
+    """The collider is a separate guide mesh: the grain's convex hull reduced to at most 64
+    points (PhysX's default limit), with the full hull's volume; the render mesh does not collide."""
+    from pxr import UsdGeom
+    from scipy.spatial import ConvexHull
+
+    scene = generate_scene("glass_beads", **SMALL)
+    folder = write_outputs(scene, tmp_path)
+    stage = Usd.Stage.Open(str(folder / "granulaire_glass_beads.usdc"))
+    for i, proto in enumerate(scene.prototypes):
+        root = stage.GetPrimAtPath(f"/World/Prototypes/Grain_{i:03d}")
+        geom, col = root.GetChild("geom"), root.GetChild("collision")
+        assert not geom.HasAPI(UsdPhysics.CollisionAPI)
+        assert col.HasAPI(UsdPhysics.CollisionAPI)
+        assert UsdPhysics.MeshCollisionAPI(col).GetApproximationAttr().Get() == "convexHull"
+        assert UsdGeom.Imageable(col).GetPurposeAttr().Get() == "guide"
+        pts = np.array(UsdGeom.Mesh(col).GetPointsAttr().Get(), float)
+        full = ConvexHull(np.asarray(proto["verts"], float))
+        assert len(pts) <= 64 < len(full.vertices)
+        assert ConvexHull(pts).volume == pytest.approx(full.volume, rel=1e-4)
+        # within a few percent of the grain's size of its full hull, both ways
+        size = np.ptp(proto["verts"], axis=0).max()
+        outside = (pts @ full.equations[:, :3].T + full.equations[:, 3]).max(axis=1).max()
+        assert outside < 0.03 * size
