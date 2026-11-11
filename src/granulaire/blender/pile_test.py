@@ -64,6 +64,17 @@ import bpy
 import numpy as np
 from pxr import Usd, UsdGeom, UsdPhysics, UsdShade
 
+try:
+    from ..ground import read_ground
+except ImportError:  # run as a script inside Blender (blender -b -P pile_test.py): load it by path
+    import importlib.util
+
+    _here = Path(__file__).parents[1] / "ground.py"
+    _spec = importlib.util.spec_from_file_location("granulaire_ground", _here)
+    _ground = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_ground)
+    read_ground = _ground.read_ground
+
 G = 9.81
 TARGET_SIZE = 0.1  # m: grains are run at least this big
 TARGET_MASS = 0.05  # kg
@@ -139,8 +150,8 @@ def read_grains(usd: Path, limit=None):
         )
         if limit and len(grains) >= limit:
             break
-    ground = stage.GetPrimAtPath("/World/Ground")
-    return grains, deformable, _material(ground)
+    g = read_ground(stage)
+    return grains, deformable, (g["dynamic_friction"], g["restitution"])
 
 
 # -------------------------------------------------------------- the scene
@@ -183,20 +194,16 @@ def to_hull(o, points):
 
 
 def to_slab(o):
-    """Give the ground a thickness below its surface (half its width): a
-    zero-thickness plane is unreliable in Bullet, small fast grains pass
-    through it. The top surface stays where the file puts it."""
-    import bmesh  # importable once bpy is loaded
-
-    bm = bmesh.new()
-    bm.from_mesh(o.data)
-    width = max(v.co.x for v in bm.verts) - min(v.co.x for v in bm.verts)
-    res = bmesh.ops.extrude_face_region(bm, geom=bm.faces[:])
-    moved = [e for e in res["geom"] if isinstance(e, bmesh.types.BMVert)]
-    bmesh.ops.translate(bm, verts=moved, vec=(0.0, 0.0, -0.5 * width))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bm.to_mesh(o.data)
-    bm.free()
+    """Thicken the ground below its top face to half its width: the file's 2 cm box is thin
+    once the scene runs in scaled units, and small fast grains could pass through it in
+    Bullet. The top face stays where the file puts it."""
+    v = o.data.vertices
+    top = max(p.co.z for p in v)
+    width = max(p.co.x for p in v) - min(p.co.x for p in v)
+    for p in v:
+        if p.co.z < top - 1e-12:
+            p.co.z = top - 0.5 * width
+    o.data.update()
 
 
 def run(target, out_dir=None, grains=None) -> dict:

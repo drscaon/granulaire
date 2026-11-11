@@ -17,7 +17,8 @@ Scene layout (units: metres, kilograms, Z up):
   /Grains
     /g_0000 ...                internal reference to a prototype, with its own
                                position, orientation and moisture state
-  /Ground                      static collision plane
+  /Ground                      the shared ground: a 2 cm box, its top at z = 0 (ground.py)
+  /GroundMaterial              its physics material
 
 Composition rule relied on: a local opinion is stronger than a variant. When
 moisture is enabled, mass and material bindings are therefore authored ONLY
@@ -47,6 +48,7 @@ import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
+from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
 
@@ -190,7 +192,7 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
     world = UsdGeom.Xform.Define(stage, "/World")
     stage.SetDefaultPrim(world.GetPrim())
     world.GetPrim().SetCustomDataByKey("granulaire:preset", preset["label"])
-    UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
+    physics_scene(stage)
     UsdGeom.Scope.Define(stage, "/World/Looks")
 
     mu = preset.get("friction", 0.6)
@@ -342,18 +344,8 @@ def export_stage(path, preset, prototypes, instances, ground_size, states=None, 
         if states:
             prim.GetVariantSets().GetVariantSet("moisture").SetVariantSelection(inst["state"])
 
-    h = ground_size / 2
-    ground = UsdGeom.Mesh.Define(stage, "/World/Ground")
-    ground.CreatePointsAttr([(-h, -h, 0), (h, -h, 0), (h, h, 0), (-h, h, 0)])
-    ground.CreateFaceVertexCountsAttr([4])
-    ground.CreateFaceVertexIndicesAttr([0, 1, 2, 3])
-    ground.CreateExtentAttr([(-h, -h, 0), (h, h, 0)])
-    ground.CreateDisplayColorAttr([Gf.Vec3f(0.5, 0.5, 0.5)])
-    UsdPhysics.CollisionAPI.Apply(ground.GetPrim())
-    ground_phys = _make_phys_material(stage, "/World/Looks/Phys_ground", 0.6, 0.1)
-    UsdShade.MaterialBindingAPI.Apply(ground.GetPrim()).Bind(
-        ground_phys, UsdShade.Tokens.weakerThanDescendants, "physics"
-    )
+    h = ground_size / 2  # the pile's footprint; the shared ground adds its margin
+    ground(stage, (-h, -h), (h, h))
 
     stage.GetRootLayer().Save()
     return stage

@@ -346,7 +346,23 @@ Every grain gets a standard OpenUSD physics material (`UsdPhysicsMaterialAPI`:
 static friction, dynamic friction, restitution), bound to its collision mesh
 with the `physics` purpose. With moisture enabled there is one material per
 state, and each grain's `moisture` variant selects it. The ground has its own
-material (static friction 0.60, restitution 0.10).
+material, the one every Primvaria project gives its ground (below).
+
+### Ground and physics scene (the same in every Primvaria project)
+
+Every file with physics carries the same two prims, so that assets from
+different generators can share one scene and every engine gets the same floor:
+
+| Prim | What it is |
+|---|---|
+| `/World/PhysicsScene` | gravity 9.81 m/s² along −Z |
+| `/World/Ground` | a static box (`UsdGeom.Cube`, `CollisionAPI`), its top face at z = 0, 2 cm thick, covering the content with 0.5 m to spare on each side (1 m × 1 m at least), grey and rendered, no PhysX attributes (engines derive their contact offsets) |
+| `/World/GroundMaterial` | its physics material: static friction 0.6, dynamic friction 0.5, restitution 0.1, a wooden or concrete floor |
+
+The code is one file, `ground.py`, identical in Granulaire, Maillage, Filaire
+and Quincaillerie; a test checks every generated file against it. The MuJoCo
+checks and the Blender rigid-body checks take the ground's friction from the
+file (Blender's cloth, in Maillage, has its own collision settings).
 
 ### Values
 
