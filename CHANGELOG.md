@@ -6,8 +6,24 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Pack files (Primvaria contract): `instances.csv` (grain positions) and `summary.json` are replaced by
+  `instances.csv` and `manifest.json`, the same in the four generators. The
+  table is read back from the OpenUSD files, one row per asset: identity,
+  aspects, `variation:<name>` and `measured:<name>` columns, then the
+  generator's own; the former summary is the manifest's `summary`.
+- The stage no longer carries the preset's label as custom data on `/World`
+  (`granulaire:preset`): each grain names its preset in `primvaria:preset`
+  (Primvaria contract).
+
 ### Added
 
+- What was measured on each grain is written in the file as
+  `primvaria:measured:<name>` (`mass_kg`, `mass_<state>_kg`, `volume_m3`, `sphericity`, `convexity`, `angularity_deg`, the three axes…).
+- `python -m granulaire.conformance` also checks every pack it finds: the table must
+  say what the files say. `pack.py` and `tests/test_pack.py` are shared by the
+  four generators.
 - Ground truth of the variation, in the file (Primvaria contract, variation
   model): `primvaria:variation:aspects`, the aspects that were switched on, and
   one `primvaria:variation:<name>` per drawn value (`diameter_m`, `elongation`, `flatness`, `facets`, `roundness_p`, `chips`, `pits`, `mineral`, `color_rgb`…).

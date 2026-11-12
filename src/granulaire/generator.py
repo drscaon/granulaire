@@ -12,7 +12,6 @@ Python and tested directly:
 from __future__ import annotations
 
 import csv
-import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -20,6 +19,7 @@ import numpy as np
 
 from . import moisture
 from .measure import measure
+from .pack import write_pack
 from .presets import PRESETS
 from .shape import make_grain
 from .usd_export import export_stage
@@ -327,7 +327,8 @@ def summarize(scene: Scene) -> dict:
 
 
 def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
-    """Write the USD scene, CSV tables, mesh archive and summary. Returns the folder."""
+    """Write the USD scene, the pack's table and manifest (instances.csv, manifest.json), the
+    prototype table and the mesh archive. Returns the folder."""
     out = Path(out_root) / scene.preset_key
     out.mkdir(parents=True, exist_ok=True)
     protos, states = scene.prototypes, scene.states
@@ -362,12 +363,6 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
             if states:
                 row += [f"{p['moisture'][s]['mass']:.6e}" for s in states]
             w.writerow(row)
-    with open(out / "instances.csv", "w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["grain", "prototype", "x_m", "y_m", "z_m", "moisture"])
-        for j, inst in enumerate(scene.instances):
-            w.writerow([j, inst["proto"], *[f"{c:.6g}" for c in inst["position"]], inst["state"] or ""])
-
     np.savez_compressed(
         out / "prototypes.npz",
         **{f"v{i}": p["verts"] for i, p in enumerate(protos)},
@@ -377,5 +372,14 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
 
     summary = summarize(scene)
     summary["usd"] = usd_path.name
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
+    # instances.csv (one row per grain, read back from the file) and manifest.json
+    extra = {
+        f"g_{j:04d}": {
+            "prototype": inst["proto"],
+            **dict(zip(("x_m", "y_m", "z_m"), map(float, inst["position"]), strict=True)),
+        }
+        for j, inst in enumerate(scene.instances)
+    }
+    aspects = [name for name, on in asdict(scene.variations).items() if on]
+    write_pack(out, scene.preset_key, scene.seed, aspects, summary=summary, extra=extra)
     return out

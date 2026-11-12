@@ -103,7 +103,7 @@ def test_usd_without_moisture_has_dry_mass(tmp_path):
     assert not prim.GetVariantSets().HasVariantSet("moisture")
     expected = scene.prototypes[scene.instances[0]["proto"]]["mass"]
     assert UsdPhysics.MassAPI(prim).GetMassAttr().Get() == pytest.approx(expected, rel=1e-6)
-    summary = json.loads((folder / "summary.json").read_text())
+    summary = json.loads((folder / "manifest.json").read_text())["summary"]
     assert summary["grains"] == 12 and summary["preset"] == "crushed_gravel"
 
 

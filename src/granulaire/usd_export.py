@@ -50,7 +50,7 @@ import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
-from .contract import set_group, write_identity, write_variation
+from .contract import set_group, write_identity, write_measured, write_variation
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
@@ -207,6 +207,33 @@ def drawn_values(proto) -> dict:
     return values
 
 
+# measured on each generated prototype (measure.py): the names they are written under
+MEASURED = {
+    "diameter_nominal_m": "diameter_nominal_m",
+    "volume_m3": "volume_m3",
+    "area_m2": "area_m2",
+    "L_m": "long_axis_m",
+    "I_m": "intermediate_axis_m",
+    "S_m": "short_axis_m",
+    "elongation_IL": "elongation",
+    "flatness_SI": "flatness",
+    "sphericity": "sphericity",
+    "convexity": "convexity",
+    "angularity_deg": "angularity_deg",
+}
+
+
+def measured_values(proto, states=None) -> dict:
+    """What was measured on a prototype once generated: its mass (dry, and in each moisture
+    state) and its shape descriptors."""
+    values = {"mass_kg": float(proto["mass"])}
+    metrics = proto.get("metrics", {})
+    values.update({name: float(metrics[key]) for key, name in MEASURED.items() if key in metrics})
+    for state in states or ():
+        values[f"mass_{state}_kg"] = float(proto["moisture"][state]["mass"])
+    return values
+
+
 def export_stage(
     path,
     preset,
@@ -236,7 +263,6 @@ def export_stage(
 
     world = UsdGeom.Xform.Define(stage, "/World")
     stage.SetDefaultPrim(world.GetPrim())
-    world.GetPrim().SetCustomDataByKey("granulaire:preset", preset["label"])
     set_group(world.GetPrim(), assembly=True)
     physics_scene(stage)
     UsdGeom.Scope.Define(stage, "/World/Looks")
@@ -277,6 +303,7 @@ def export_stage(
             identifier=f"./{Path(path).name}",
         )
         write_variation(prim, aspects, drawn_values(proto))
+        write_measured(prim, measured_values(proto, states))
         if deformable:
             prim.AddAppliedSchema("OmniPhysicsDeformableBodyAPI")
             prim.CreateAttribute("omniphysics:deformableBodyEnabled", Sdf.ValueTypeNames.Bool).Set(True)
