@@ -13,3 +13,11 @@ def contract_files(tmp_path_factory):
     for preset in ("crushed_gravel", "cherry_tomatoes"):
         write_outputs(generate_scene(preset, shapes=3, copies=2, variations=Variations(moisture=True)), out)
     return usd_files([out])
+
+
+@pytest.fixture(scope="session")
+def pack_folder(tmp_path_factory):
+    """A pack freshly generated: grains with moisture states."""
+    out = tmp_path_factory.mktemp("pack")
+    scene = generate_scene("crushed_gravel", shapes=3, copies=2, variations=Variations(moisture=True))
+    return write_outputs(scene, out)

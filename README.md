@@ -207,8 +207,8 @@ dominates for porous stone (pozzolana) and for anything that soaks
 | Wood pellets | +15 % | +41 % | +52 % |
 | Common beans | +27 % | +73 % | +92 % |
 
-Every preset's values are in `summary.json` (`median_water_content_pct`) and
-per grain in `prototype_metrics.csv` (`mass_<state>_kg`).
+Every preset's values are in `manifest.json` (`median_water_content_pct`, in
+its summary) and per grain in `instances.csv` (`measured:mass_<state>_kg`).
 
 - **No swelling.** A wet grain gets heavier but keeps its shape and size. In
   reality beans, seeds and wood pellets swell when soaked, so their wet
@@ -291,9 +291,9 @@ built on the core `UsdGeom.TetMesh`:
 | File | Content |
 |---|---|
 | `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
-| `prototype_metrics.csv` | measured descriptors, mass (per moisture state), parameters |
-| `instances.csv` | grain → shape, position, moisture state |
-| `summary.json` | global statistics (d50, mean sphericity, masses, water) |
+| `prototype_metrics.csv` | one row per shape: measured descriptors, mass (per moisture state), parameters |
+| `instances.csv` | one row per grain, read back from the file: its identity, **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
+| `manifest.json` | what the pack is (contract, generator, version, preset, seed, aspects, files) and its summary: global statistics (d50, mean sphericity, masses, water) |
 | `prototypes.npz` | meshes, used by the renderer |
 | `shape_sheet.png`, `mix_preview.png` | previews (`granulaire render`) |
 
@@ -455,6 +455,13 @@ What was drawn for each grain is in the file too, its ground truth:
 (`size`, `shape`, `roundness`, `mineralogy`, `orientation`, `moisture`) and `primvaria:variation:<name>` holds each drawn value
 (`diameter_m`, `elongation`, `flatness`, `facets`, `roundness_p`, `chips`, `pits`, `mineral`, `color_rgb`…). They are written on the prototype; a grain adds its own drawn `moisture` state, and its orientation is its transform. An aspect that is switched off is still recorded, at its
 nominal value, and the other aspects keep their draws.
+
+What was measured on each grain once generated is there as well, as
+`primvaria:measured:<name>` (`mass_kg`, `mass_<state>_kg`, `volume_m3`, `sphericity`, `convexity`, `angularity_deg`, the three axes…).
+The pack's `instances.csv` is read back from the OpenUSD files, one row per
+asset with the same names (`variation:<name>`, `measured:<name>`), and
+`manifest.json` says what the pack is; both have the same shape in the four
+generators, and the command above fails when the table and the files disagree.
 
 ## Physics checks
 

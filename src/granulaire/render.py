@@ -10,12 +10,12 @@ Requires the optional dependency: pip install "granulaire[render]".
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 
 import numpy as np
 
 from .moisture import LABELS, STATE_PARAMS, STATES, wet_color
+from .pack import read_manifest
 
 LIGHT = np.array([-0.4, 0.5, 0.77])
 LIGHT /= np.linalg.norm(LIGHT)
@@ -79,7 +79,7 @@ def shade_mesh(verts, faces, color, state=None, surface_rough=None):
 
 
 def _load(folder: Path):
-    summary = json.loads((folder / "summary.json").read_text())
+    summary = read_manifest(folder)["summary"]
     return summary, np.load(folder / "prototypes.npz")
 
 
@@ -243,7 +243,7 @@ def metrics_chart(folders: list[Path], out: Path) -> Path:
         _style(ax)
 
     for color, folder in zip(SERIES, folders, strict=False):
-        label = json.loads((folder / "summary.json").read_text())["label"]
+        label = read_manifest(folder)["summary"]["label"]
         rows = list(csv.DictReader(open(folder / "prototype_metrics.csv")))
         m = {
             k: np.array([float(r[k]) for r in rows])

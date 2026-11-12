@@ -38,7 +38,7 @@ def test_generate_with_toggles(tmp_path, capsys):
         ]
     )
     assert code == 0
-    summary = json.loads((tmp_path / "rounded_gravel" / "summary.json").read_text())
+    summary = json.loads((tmp_path / "rounded_gravel" / "manifest.json").read_text())["summary"]
     assert summary["variations"]["size"] is False
     assert summary["moisture"]["grains_per_state"]["wet"] == 4
 
@@ -46,7 +46,7 @@ def test_generate_with_toggles(tmp_path, capsys):
 def test_generate_no_shuffle(tmp_path):
     args = ["generate", "--preset", "glass_beads", "--shapes", "3", "--copies", "2", "--no-shuffle"]
     assert main([*args, "--out", str(tmp_path)]) == 0
-    summary = json.loads((tmp_path / "glass_beads" / "summary.json").read_text())
+    summary = json.loads((tmp_path / "glass_beads" / "manifest.json").read_text())["summary"]
     assert summary["shuffled"] is False
     assert summary["shapes"] == 3 and summary["grains"] == 6
     rows = (tmp_path / "glass_beads" / "instances.csv").read_text().splitlines()
