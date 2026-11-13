@@ -159,7 +159,7 @@ same seed you compare the same scene with a single difference.
 | `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
 | `granulaire_<preset>_omniphysics.usdc` | deformable presets only: the same scene with deformable bodies for NVIDIA OmniPhysics (Omniverse, Isaac Sim 5+), a layer over the file, to open instead of it |
 | `prototype_metrics.csv` | one row per shape: measured descriptors, mass (per moisture state), parameters |
-| `instances.csv` | one row per grain, read back from the file: its identity, **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
+| `instances.csv` | one row per grain, read back from the file: its identity, its classes (the [semantic labels](https://github.com/drscaon/granulaire/blob/main/docs/openusd.md) renderers turn into segmentation masks), **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
 | `manifest.json` | what the pack is (contract, generator, version, preset, seed, aspects, files) and its summary: global statistics (d50, mean sphericity, masses, water) and `grading`, the sizes against the preset's curve (see [Limits](https://github.com/drscaon/granulaire/blob/main/docs/limits.md#limits)) |
 | `prototypes.npz` | meshes, used by the renderer |
 | `shape_sheet.png`, `mix_preview.png` | previews (`granulaire render`) |
