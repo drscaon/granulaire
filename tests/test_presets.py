@@ -69,13 +69,13 @@ def test_beach_pebbles_are_dark_basalt_and_white_marble():
 
 
 def test_readme_friction_table_matches_presets():
-    """The README friction table is written by hand: keep it in sync with the code."""
+    """The friction table of docs/physics.md is written by hand: keep it in sync with the code."""
     import re
     from pathlib import Path
 
     from granulaire.moisture import STATE_PARAMS
 
-    readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
+    readme = (Path(__file__).parents[1] / "docs" / "physics.md").read_text(encoding="utf-8")
     rows = dict(re.findall(r"^\| `(\w+)` \| (\d\.\d\d \|.*)\|$", readme, re.M))
     for key, preset in PRESETS.items():
         cells = [c.strip() for c in rows[key].split("|")]
