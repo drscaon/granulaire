@@ -26,8 +26,7 @@ print(mujoco_test.summary(report))
 for name, ok in report["checks"].items():
     print(f"  {'ok  ' if ok else 'FAIL'} {name}")
 # Speeds are relative to the speed of a grain that falls from its own thickness.
-print(
-    f"pile height {report['pile_height_m'] * 1000:.1f} mm, fastest grain at rest: {report['max_speed_rel']:.4f}"
-)
+height_mm, speed = report["pile_height_m"] * 1000, report["max_speed_rel"]
+print(f"pile height {height_mm:.1f} mm, fastest grain at rest: {speed:.4f}")
 
 sys.exit(0 if report["passed"] else 1)

@@ -40,6 +40,5 @@ for row in rows[:6]:
     diameter_mm = float(row["variation:diameter_m"]) * 1000
     mass_g = float(row["measured:mass_kg"]) * 1000
     sphericity = float(row["measured:sphericity"])
-    print(
-        f"{row['name']:8s} {diameter_mm:12.2f} mm {mass_g:11.3f} g {sphericity:11.2f}  {row['variation:mineral']}"
-    )
+    mineral = row["variation:mineral"]
+    print(f"{row['name']:8s} {diameter_mm:12.2f} mm {mass_g:11.3f} g {sphericity:11.2f}  {mineral}")
