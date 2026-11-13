@@ -34,10 +34,10 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
-from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
+from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdSemantics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
-from .contract import set_group, write_identity, write_measured, write_variation
+from .contract import set_group, write_identity, write_labels, write_measured, write_variation
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
@@ -219,6 +219,7 @@ def export_stage(
             seed=seed,
             identifier=f"./{Path(path).name}",
         )
+        write_labels(prim, ("grain", preset_key or preset["label"]))  # the grains name themselves below
         write_variation(prim, aspects, drawn_values(proto))
         write_measured(prim, measured_values(proto, states))
         UsdPhysics.RigidBodyAPI.Apply(prim)
@@ -317,6 +318,7 @@ def export_stage(
         w, x, y, z = inst["orient"]
         xf.AddOrientOp().Set(Gf.Quatf(float(w), float(x), float(y), float(z)))
         prim.CreateAttribute("granulaire:prototype", Sdf.ValueTypeNames.Int).Set(int(inst["proto"]))
+        UsdSemantics.LabelsAPI.Apply(prim, "instance").CreateLabelsAttr([prim.GetName()])
         if states:
             write_variation(prim, aspects, {"moisture": inst["state"]})
             prim.GetVariantSets().GetVariantSet("moisture").SetVariantSelection(inst["state"])
