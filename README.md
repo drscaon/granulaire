@@ -540,6 +540,16 @@ deformable bodies need NVIDIA OmniPhysics (Isaac Sim, an RTX GPU); see
   randomisation, these values are a sensible centre to randomise around; for a
   quantitative study, calibrate them against the real material, for example
   with its angle of repose.
+- **Angle of repose not verified.** The pile test proves that grains settle
+  and stay put, not that a heap takes the real material's slope. Two CPU
+  tests were tried in MuJoCo 4.0.1 and neither can be trusted. A heap poured
+  from a lifted cylinder (200 crushed-gravel grains, 15 minutes) came to rest
+  at about 21°, well below what crushed stone does. A tilting bed (54 to 96
+  free grains on a layer of fixed ones) started to slide at 31° for crushed
+  gravel and 33–35° for glass beads, the reverse of the real materials'
+  order. A few hundred grains is too few for a slope to mean anything, and
+  more does not fit in a CPU check. No angle of repose is published for any
+  preset until a test reproduces known materials.
 
 ## Physics limits by grain size
 
