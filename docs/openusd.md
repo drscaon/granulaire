@@ -63,3 +63,9 @@ The pack's `instances.csv` is read back from the OpenUSD files, one row per
 asset with the same names (`variation:<name>`, `measured:<name>`), and
 `manifest.json` says what the pack is; both have the same shape in the four
 generators, and the command above fails when the table and the files disagree.
+
+Each grain also says what it is with OpenUSD's own semantic labels
+(`UsdSemantics.LabelsAPI`), which renderers such as Isaac Sim turn into
+segmentation masks: `semantics:labels:class` holds `grain` and the preset (`crushed_gravel`), and
+`semantics:labels:instance` the asset's name. Each grain's instance label is its own name (`g_0042`); its classes are written on the prototype it references. The classes are a
+column of `instances.csv` and are listed in `manifest.json`.
