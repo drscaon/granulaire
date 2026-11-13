@@ -75,12 +75,12 @@ measurements of a specific deposit.
 | `glass_beads` | 0.35 | 0.32 | 0.85 | 0.39 | 0.35 | 0.28 |
 
 — : no moisture states for this preset. Packing peanuts and cherry tomatoes
-are deformable: NVIDIA OmniPhysics ignores static friction for deformables, so
-their single value is written as both static and dynamic friction, and
-restitution does not apply (their bounce comes from elasticity and damping, see
-[Deformable grains](usage.md#deformable-grains-packing-peanuts-cherry-tomatoes)); the
-restitution shown is used when they are exported as rigid bodies
-(`--no-deformable`).
+are rigid bodies in the file, with the values shown. In their OmniPhysics
+layer they are deformable: OmniPhysics ignores static friction for
+deformables, so the single value is written as both static and dynamic
+friction, and restitution does not apply (their bounce comes from elasticity
+and damping, see
+[Deformable grains](usage.md#deformable-grains-packing-peanuts-cherry-tomatoes)).
 
 ### Which engines use it
 
@@ -119,8 +119,9 @@ convex hull of at most 64 points, as the file's `convexHull` approximation
 asks), mass, friction and
 restitution of its physics material, the ground. Reports are written to
 `<folder>/sim_test/` (with the MuJoCo model, `mujoco_pile.xml`) and
-`<folder>/blender_test/`. CI runs both tests on **all 25 presets**, deformable
-presets as rigid bodies (`--no-deformable`).
+`<folder>/blender_test/`. CI runs both tests on **all 25 presets**: the file
+holds rigid bodies for every one of them, packing peanuts and cherry tomatoes
+included.
 
 **Scaled units.** Engines have absolute tolerances (collision margins, contact
 offsets, minimum masses) set for objects of a few centimetres or more, which

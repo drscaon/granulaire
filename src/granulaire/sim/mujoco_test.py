@@ -93,7 +93,7 @@ def run(target, out_dir=None, grains: int | None = None, settle: float = SETTLE)
 
     scene = scale_units(read_scene(target, grains), TARGET_SIZE, TARGET_MASS)
     if not scene.grains:
-        raise ValueError(f"{scene.path}: no rigid grain (deformable presets: generate with --no-deformable)")
+        raise ValueError(f"{scene.path}: no rigid grain (an OmniPhysics layer? test the file it lies over)")
     k, km = scene.k_len, scene.k_mass
     g = G * k
     thick = scene.thickness * k

@@ -42,11 +42,14 @@ def test_mujoco_sand_at_scale(tmp_path):
     assert report["passed"], report["checks"]
 
 
-def test_deformable_grains_are_not_rigid(tmp_path):
-    from granulaire.sim.scene import read_scene
+def test_deformable_presets_are_rigid_in_the_file_and_deformable_in_the_layer(tmp_path):
+    from granulaire.omniphysics import overlay_path
+    from granulaire.sim.scene import find_usd, read_scene
 
     folder = write_outputs(generate_scene("packing_peanuts", shapes=2, copies=1), tmp_path)
-    assert read_scene(folder).deformable == 2
+    scene = read_scene(folder)  # the file: what every engine reads
+    assert scene.deformable == 0 and len(scene.grains) == 2
+    assert read_scene(overlay_path(find_usd(folder))).deformable == 2  # the OmniPhysics layer
 
 
 @pytest.mark.skipif(importlib.util.find_spec("bpy") is None, reason="Blender (bpy) not installed")
