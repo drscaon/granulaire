@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import numpy as np
+from scipy import stats
 
 from . import moisture
 from .measure import measure
@@ -283,6 +284,33 @@ def generate_scene(
     )
 
 
+def grading(scene: Scene) -> dict | None:
+    """How the grains' sizes sit against the preset's grading curve.
+
+    The target is a normal law in phi units (phi = -log2 of the diameter in
+    mm). Returns the sample's mean and spread next to the target's, with the
+    Kolmogorov-Smirnov statistic and its p-value: a small p-value says the
+    sample is unlikely to come from the curve. None when sizes are not drawn
+    (size variation off), since every grain then has the median diameter.
+    """
+    if not scene.variations.size:
+        return None
+    d = np.array([p["metrics"]["diameter_nominal_m"] for p in scene.prototypes])
+    phi = -np.log2(d * 1000.0)
+    mean, std = float(scene.preset["phi_mean"]), float(scene.preset["phi_std"])
+    test = stats.kstest(phi, stats.norm(mean, std).cdf)
+    return {
+        "shapes": len(phi),
+        "target_d50_mm": float(2.0 ** (-mean)),
+        "target_phi_mean": mean,
+        "target_phi_std": std,
+        "phi_mean": float(phi.mean()),
+        "phi_std": float(phi.std(ddof=1)) if len(phi) > 1 else 0.0,
+        "ks_statistic": float(test.statistic),
+        "ks_pvalue": float(test.pvalue),
+    }
+
+
 def summarize(scene: Scene) -> dict:
     protos = scene.prototypes
     keys = list(protos[0]["metrics"].keys())
@@ -309,6 +337,8 @@ def summarize(scene: Scene) -> dict:
         "total_dry_mass_g": float(dry_total * 1000),
         "deformable": bool(scene.deformable),
     }
+    if (curve := grading(scene)) is not None:
+        summary["grading"] = curve
     if scene.deformable:
         summary["tetrahedra_per_grain_median"] = int(np.median([len(p["tets"]) for p in protos]))
     if scene.states:

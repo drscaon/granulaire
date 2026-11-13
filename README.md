@@ -293,7 +293,7 @@ built on the core `UsdGeom.TetMesh`:
 | `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
 | `prototype_metrics.csv` | one row per shape: measured descriptors, mass (per moisture state), parameters |
 | `instances.csv` | one row per grain, read back from the file: its identity, **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
-| `manifest.json` | what the pack is (contract, generator, version, preset, seed, aspects, files) and its summary: global statistics (d50, mean sphericity, masses, water) |
+| `manifest.json` | what the pack is (contract, generator, version, preset, seed, aspects, files) and its summary: global statistics (d50, mean sphericity, masses, water) and `grading`, the sizes against the preset's curve (see [Limits](#limits)) |
 | `prototypes.npz` | meshes, used by the renderer |
 | `shape_sheet.png`, `mix_preview.png` | previews (`granulaire render`) |
 
@@ -536,6 +536,12 @@ deformable bodies need NVIDIA OmniPhysics (Isaac Sim, an RTX GPU); see
   shapes play that role: an angular grain cannot roll. Rounded grains (river
   pebbles, beads, soybeans, pellets) do roll: add the engine's own rolling
   resistance when it has one (the MuJoCo test does).
+- **A pack is a sample of the grading curve.** Sizes are drawn from a normal
+  law in phi units (`phi_mean`, `phi_std` of the preset), and the tests check
+  2000 draws per preset against it. A pack of 100 shapes is a small sample:
+  its `grading` entry in `manifest.json` gives the sample's mean and spread
+  next to the target's, with the Kolmogorov–Smirnov statistic and p-value.
+  For a closer match, generate more shapes.
 - **Calibrate for quantitative work.** For training with domain
   randomisation, these values are a sensible centre to randomise around; for a
   quantitative study, calibrate them against the real material, for example
