@@ -118,12 +118,23 @@ def _api_schemas(prim):
 def test_deformable_grains_follow_the_omniphysics_layout(key, tmp_path):
     from pxr import UsdGeom
 
+    from granulaire import omniphysics
+
     scene = generate_scene(key, shapes=3, copies=1, seed=2)
     folder = write_outputs(scene, tmp_path)
-    stage = Usd.Stage.Open(str(folder / f"granulaire_{key}.usdc"))
+    # the file itself holds rigid bodies and nothing specific to an engine...
+    main = Usd.Stage.Open(str(folder / f"granulaire_{key}.usdc"))
+    assert omniphysics.engine_data(main) == []
+    for prim in main.GetPrimAtPath("/World/Grains").GetChildren():
+        assert prim.HasAPI(UsdPhysics.RigidBodyAPI) and not prim.GetChild("sim")
+        assert prim.GetChild("collision").HasAPI(UsdPhysics.CollisionAPI)
+    # ... and the layer over it makes the same grains deformable
+    layer = folder / f"granulaire_{key}_omniphysics.usdc"
+    assert omniphysics.check(layer) == [] and omniphysics.main([str(folder)]) == 0
+    stage = Usd.Stage.Open(str(layer))
     for prim, inst in zip(stage.GetPrimAtPath("/World/Grains").GetChildren(), scene.instances, strict=True):
         assert "OmniPhysicsDeformableBodyAPI" in _api_schemas(prim)
-        assert not prim.HasAPI(UsdPhysics.RigidBodyAPI)
+        assert not prim.HasAPI(UsdPhysics.RigidBodyAPI) and not prim.GetChild("collision").IsActive()
         expected = scene.prototypes[inst["proto"]]["mass"]
         assert prim.GetAttribute("omniphysics:mass").Get() == pytest.approx(expected, rel=1e-6)
 
@@ -154,6 +165,30 @@ def test_peanuts_can_be_exported_as_rigid_bodies(tmp_path):
     prim = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
     assert prim.HasAPI(UsdPhysics.RigidBodyAPI)
     assert not prim.GetChild("sim")
+    assert not list(folder.glob("*_omniphysics.usd*"))  # no layer: nothing makes them deformable
+
+
+def test_deformable_layer_with_moisture_states(tmp_path, monkeypatch):
+    """No preset is both deformable and wettable today; the layer must still follow the variants."""
+    import copy
+
+    from granulaire import PRESETS, Variations, omniphysics
+
+    soft = dict(copy.deepcopy(PRESETS["cherry_tomatoes"]), moisture=True, label="Soft test")
+    monkeypatch.setitem(PRESETS, "soft_test", soft)
+    scene = generate_scene("soft_test", shapes=2, copies=1, seed=2, variations=Variations(moisture=True))
+    folder = write_outputs(scene, tmp_path)
+    layer = folder / "granulaire_soft_test_omniphysics.usdc"
+    assert omniphysics.check(layer) == []
+    stage = Usd.Stage.Open(str(layer))
+    grain = stage.GetPrimAtPath("/World/Grains").GetChildren()[0]
+    masses = set()
+    for state in grain.GetVariantSet("moisture").GetVariantNames():
+        grain.GetVariantSet("moisture").SetVariantSelection(state)
+        material = UsdShade.MaterialBindingAPI(grain).ComputeBoundMaterial("physics")[0]
+        assert material.GetPath() == f"/World/Looks/Soft_{state}"
+        masses.add(grain.GetAttribute("omniphysics:mass").Get())
+    assert len(masses) == 4  # a wet grain is heavier
 
 
 @pytest.mark.parametrize("key", ["packing_peanuts", "cherry_tomatoes"])

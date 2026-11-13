@@ -8,6 +8,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Breaking changes
 
+- Packing peanuts and cherry tomatoes are rigid bodies in the file, like every
+  other grain: the file holds plain OpenUSD and `UsdPhysics` only. What makes
+  them deformable (NVIDIA OmniPhysics schema, tetrahedral simulation mesh,
+  deformable material) is a layer over the file,
+  `granulaire_<preset>_omniphysics.usdc`, to open instead of the file in Isaac
+  Sim (`omniphysics.py`, `python -m granulaire.omniphysics` to check a pack).
+  `--no-deformable` no longer changes the file: it only leaves the layer out.
+  The pile tests run on these presets as on the others.
+- `usd_export.export_stage` loses its `deformable` argument.
+
 - Pack files (Primvaria contract): `instances.csv` (grain positions) and `summary.json` are replaced by
   `instances.csv` and `manifest.json`, the same in the four generators. The
   table is read back from the OpenUSD files, one row per asset: identity,

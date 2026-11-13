@@ -93,7 +93,8 @@ FPS = 24
 
 def find_usd(path: Path) -> Path:
     if path.is_dir():
-        found = sorted(path.glob("granulaire_*.usd*"))
+        # the file itself, not the OmniPhysics layer over it
+        found = sorted(p for p in path.glob("granulaire_*.usd*") if not p.stem.endswith("_omniphysics"))
         if not found:
             raise SystemExit(f"no granulaire_*.usd* file in {path}")
         return found[0]
@@ -212,7 +213,7 @@ def run(target, out_dir=None, grains=None) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     data, deformable, (g_mu, g_e) = read_grains(usd, grains)
     if not data:
-        raise SystemExit(f"{usd}: no rigid grain (deformable presets: generate with --no-deformable)")
+        raise SystemExit(f"{usd}: no rigid grain (an OmniPhysics layer? test the file it lies over)")
     size = float(np.median([g["size"] for g in data]))
     thick = float(np.median([g["thickness"] for g in data]))
     k = min(MAX_IMPORT_SCALE, max(1.0, TARGET_SIZE / size))

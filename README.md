@@ -59,7 +59,8 @@ Regenerate with `granulaire render-gallery` (see Usage).*
 - **Tests every preset in MuJoCo and Blender** (`granulaire sim-test`,
   `granulaire blender-test`): a pile of grains read back from the file falls
   and must settle; see [Physics checks](https://github.com/drscaon/granulaire/blob/main/docs/physics.md#physics-checks).
-- Exports packing peanuts and cherry tomatoes as deformable bodies.
+- Exports packing peanuts and cherry tomatoes as rigid bodies like the other
+  grains, plus a layer over the file that makes them deformable bodies.
   **Deformable simulation works only with NVIDIA OmniPhysics** (Omniverse,
   Isaac Sim 5+) and is **not tested yet**; see
   [Deformable grains](https://github.com/drscaon/granulaire/blob/main/docs/usage.md#deformable-grains-packing-peanuts-cherry-tomatoes).
@@ -75,7 +76,7 @@ stands, as on the [Primvaria engine matrix](https://primvaria.com/#engines):
 | Blender | **tested**: pile test of every preset, through Blender's USD importer (`granulaire blender-test`) |
 | MuJoCo | **tested**: pile test of every preset, model built from the file (`granulaire sim-test`) |
 | NVIDIA Isaac Sim (PhysX) | not tested yet (needs an NVIDIA RTX GPU); standard `UsdPhysics` rigid bodies |
-| NVIDIA OmniPhysics deformables | packing peanuts and cherry tomatoes exported, not simulated yet |
+| NVIDIA OmniPhysics deformables | packing peanuts and cherry tomatoes exported as a layer over the file, structure checked, not simulated yet |
 
 ## Installation
 
@@ -156,6 +157,7 @@ same seed you compare the same scene with a single difference.
 | File | Content |
 |---|---|
 | `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
+| `granulaire_<preset>_omniphysics.usdc` | deformable presets only: the same scene with deformable bodies for NVIDIA OmniPhysics (Omniverse, Isaac Sim 5+), a layer over the file, to open instead of it |
 | `prototype_metrics.csv` | one row per shape: measured descriptors, mass (per moisture state), parameters |
 | `instances.csv` | one row per grain, read back from the file: its identity, **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
 | `manifest.json` | what the pack is (contract, generator, version, preset, seed, aspects, files) and its summary: global statistics (d50, mean sphericity, masses, water) and `grading`, the sizes against the preset's curve (see [Limits](https://github.com/drscaon/granulaire/blob/main/docs/limits.md#limits)) |

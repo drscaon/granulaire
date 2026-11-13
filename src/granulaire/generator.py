@@ -178,9 +178,10 @@ def generate_scene(
     placed next to each other, shape after shape, which is handy to compare
     shapes. Everything else in the scene is identical either way.
 
-    Presets with a "deformable" entry (packing peanuts) also get a tetrahedral
-    simulation mesh per grain and are exported as deformable bodies, unless
-    deformable=False (then they are exported as rigid bodies like the others).
+    Presets with a "deformable" entry (packing peanuts, cherry tomatoes) also get a
+    tetrahedral simulation mesh per grain, written with the OmniPhysics deformable schema
+    as a layer over the file (omniphysics.py), unless deformable=False. The file itself
+    holds rigid bodies either way.
     """
     if preset_key not in PRESETS:
         raise KeyError(f"unknown preset '{preset_key}'")
@@ -371,11 +372,18 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
         scene.instances,
         ground_size=4 * scene.side * scene.spacing,
         states=states,
-        deformable=scene.deformable,
         preset_key=scene.preset_key,
         seed=scene.seed,
         aspects=[name for name, on in asdict(scene.variations).items() if on],
     )
+
+    # what makes peanuts and tomatoes deformable is a layer over the file (omniphysics.py)
+    from .omniphysics import overlay_path, write_overlay
+
+    if scene.deformable:
+        write_overlay(usd_path, scene.preset, protos, states)
+    else:
+        overlay_path(usd_path).unlink(missing_ok=True)
 
     keys = list(protos[0]["metrics"].keys())
     with open(out / "prototype_metrics.csv", "w", newline="") as f:

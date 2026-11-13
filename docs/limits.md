@@ -48,12 +48,12 @@ Part of the [Granulaire](../README.md) documentation.
 - **Collision uses a convex hull of 64 points** for rigid grains, within 2.4 %
   of the grain's size of its full hull. Pits, creases and dents are visible
   but not part of the collision shape; hollow shells (whole
-  seashells) are not generated. Deformable grains collide with their
+  seashells) are not generated. In the OmniPhysics layer, deformable grains collide with their
   tetrahedral mesh.
 - **Deformables work only with NVIDIA OmniPhysics, untested.** Until OpenUSD
   standardises deformable bodies, packing peanuts and cherry tomatoes are
-  simulated as deformables only in Omniverse / Isaac Sim (GPU); elsewhere they
-  are static meshes unless exported with `--no-deformable`. They have not been
+  simulated as deformables only in Omniverse / Isaac Sim (GPU), through the
+  OmniPhysics layer over the file; elsewhere they are rigid bodies. They have not been
   run in Isaac Sim yet.
 - **Mesh resolution.** Marching cubes runs on a 48-cell grid along the longest
   axis; the sharpest edges can show slight stair-stepping.

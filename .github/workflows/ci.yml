@@ -39,7 +39,7 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install
         run: pip install -e ".[sim]"
-      - name: Pile test of every preset (deformable presets as rigid bodies)
+      - name: Pile test of every preset
         run: |
           for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
             granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-sim > /dev/null
@@ -73,7 +73,7 @@ jobs:
         run: pip install -e ".[dev,blender]"
       - name: Blender test
         run: pytest tests/test_physics.py -v -k blender
-      - name: Pile test of every preset (deformable presets as rigid bodies)
+      - name: Pile test of every preset
         run: |
           for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
             granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-blender > /dev/null
@@ -107,3 +107,5 @@ jobs:
         run: python -m granulaire.validate ci-usd
       - name: Check every file against the Primvaria contract
         run: python -m granulaire.conformance ci-usd
+      - name: OmniPhysics layers of the deformable presets (structure; not simulated)
+        run: python -m granulaire.omniphysics ci-usd

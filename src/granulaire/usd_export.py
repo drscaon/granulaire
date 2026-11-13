@@ -25,22 +25,9 @@ moisture is enabled, mass and material bindings are therefore authored ONLY
 inside the variants, never directly on the prototype; each grain picks its
 variant through a local selection.
 
-Deformable grains (packing peanuts, cherry tomatoes). Core OpenUSD has no deformable-body
-schema yet (UsdPhysics covers rigid bodies), so these follow NVIDIA's
-OmniPhysics deformable schema (Omniverse / Isaac Sim 5), built on the core
-UsdGeom.TetMesh. The API schemas are applied by name: the file stays valid
-OpenUSD for any tool, and engines that know the schema simulate it.
-
-  /Grain_000                   Xform + OmniPhysicsDeformableBodyAPI
-                               (omniphysics:mass), physics material bound
-    /geom                      render Mesh + OmniPhysicsDeformablePoseAPI:custom
-    /sim                       TetMesh + OmniPhysicsVolumeDeformableSimAPI
-                               + OmniPhysicsDeformablePoseAPI:custom
-                               + UsdPhysics CollisionAPI (single collider)
-  /Looks/Phys[_<state>]        OmniPhysicsBaseMaterialAPI (density, friction)
-                               + OmniPhysicsDeformableMaterialAPI (Young's
-                               modulus, Poisson's ratio)
-                               + PhysxDeformableMaterialAPI (elasticity damping)
+Deformable grains (packing peanuts, cherry tomatoes) are rigid bodies here like the others:
+core OpenUSD has no deformable-body schema yet, so what makes them deformable follows NVIDIA's
+OmniPhysics schema and is kept out of this file, in a layer over it (omniphysics.py).
 """
 
 from pathlib import Path
@@ -76,63 +63,6 @@ def _make_phys_material(stage, path, friction, restitution):
     pm.CreateDynamicFrictionAttr(float(friction) * 0.9)
     pm.CreateRestitutionAttr(float(restitution))
     return mat
-
-
-def _make_deformable_material(
-    stage, path, friction, density, youngs_modulus, poissons_ratio, elasticity_damping=0.0
-):
-    """Deformable material: OmniPhysics elasticity (Young's modulus, Poisson's
-    ratio) on top of the OmniPhysics base material (density, friction), plus
-    PhysX elasticity damping (1/s), which sets how much a deformable grain
-    bounces back. Schemas are applied by name (not registered in usd-core)."""
-    mat = UsdShade.Material.Define(stage, path)
-    prim = mat.GetPrim()
-    for schema in (
-        "OmniPhysicsBaseMaterialAPI",
-        "OmniPhysicsDeformableMaterialAPI",
-        "PhysxDeformableMaterialAPI",
-    ):
-        prim.AddAppliedSchema(schema)
-    for name, value in [
-        ("omniphysics:youngsModulus", youngs_modulus),
-        ("omniphysics:poissonsRatio", poissons_ratio),
-        ("omniphysics:density", density),
-        # PhysX deformables ignore static friction: use dynamic friction
-        ("omniphysics:dynamicFriction", friction),
-        ("omniphysics:staticFriction", friction),
-        ("physxDeformableMaterial:elasticityDamping", elasticity_damping),
-    ]:
-        prim.CreateAttribute(name, Sdf.ValueTypeNames.Float).Set(float(value))
-    return mat
-
-
-def _set_bind_pose(prim, points):
-    prim.AddAppliedSchema("OmniPhysicsDeformablePoseAPI:custom")
-    prim.CreateAttribute("deformablePose:custom:omniphysics:purposes", Sdf.ValueTypeNames.TokenArray).Set(
-        ["bindPose"]
-    )
-    prim.CreateAttribute("deformablePose:custom:omniphysics:points", Sdf.ValueTypeNames.Point3fArray).Set(
-        Vt.Vec3fArray.FromNumpy(points.astype(np.float32))
-    )
-
-
-def _make_tet_mesh(stage, path, points, tets):
-    tet = UsdGeom.TetMesh.Define(stage, path)
-    pts = Vt.Vec3fArray.FromNumpy(points.astype(np.float32))
-    idx = Vt.Vec4iArray.FromNumpy(tets.astype(np.int32))
-    tet.CreatePointsAttr(pts)
-    tet.CreateTetVertexIndicesAttr(idx)
-    tet.CreateSurfaceFaceVertexIndicesAttr(UsdGeom.TetMesh.ComputeSurfaceFaces(tet))
-    lo, hi = points.min(axis=0), points.max(axis=0)
-    tet.CreateExtentAttr([Gf.Vec3f(*lo), Gf.Vec3f(*hi)])
-    prim = tet.GetPrim()
-    prim.AddAppliedSchema("OmniPhysicsVolumeDeformableSimAPI")
-    prim.CreateAttribute("omniphysics:restShapePoints", Sdf.ValueTypeNames.Point3fArray).Set(pts)
-    prim.CreateAttribute("omniphysics:restTetVtxIndices", Sdf.ValueTypeNames.Int4Array).Set(idx)
-    _set_bind_pose(prim, points)
-    UsdPhysics.CollisionAPI.Apply(prim)
-    tet.CreatePurposeAttr(UsdGeom.Tokens.guide)  # simulation mesh: hidden in renders
-    return tet
 
 
 HULL_POINTS = 64  # PhysX's default hull vertex limit (physxConvexHullCollision:hullVertexLimit)
@@ -241,17 +171,14 @@ def export_stage(
     instances,
     ground_size,
     states=None,
-    deformable=None,
     preset_key=None,
     seed=0,
     aspects=(),
 ):
     """prototypes: list of dicts {verts, faces, color, mineral, mass, metrics,
-    moisture: {state: {mass, water_mass, cohesion}}, and for deformables
-    tet_points, tets}
+    moisture: {state: {mass, water_mass, cohesion}}}
     instances: list of dicts {proto, position, orient (w, x, y, z), state}
     states: list of exported moisture states, or None (no variant set).
-    deformable: the preset's deformable settings, or None for rigid bodies.
     preset_key, seed: the preset's key and the scene's seed, written as each grain's identity
     (Primvaria contract: kind component, assetInfo, primvaria:* attributes).
     aspects: the variations that were switched on; with each prototype's drawn values they are
@@ -274,16 +201,6 @@ def export_stage(
     def phys_material(path, state):
         k_mu = STATE_PARAMS[state]["mu"] if state else 1.0
         k_e = STATE_PARAMS[state]["e"] if state else 1.0
-        if deformable:
-            return _make_deformable_material(
-                stage,
-                path,
-                mu * k_mu,
-                preset["density"],
-                deformable["youngs_modulus"],
-                deformable["poissons_ratio"],
-                deformable.get("elasticity_damping", 0.0),
-            )
         return _make_phys_material(stage, path, mu * k_mu, e * k_e)
 
     if states:
@@ -304,14 +221,8 @@ def export_stage(
         )
         write_variation(prim, aspects, drawn_values(proto))
         write_measured(prim, measured_values(proto, states))
-        if deformable:
-            prim.AddAppliedSchema("OmniPhysicsDeformableBodyAPI")
-            prim.CreateAttribute("omniphysics:deformableBodyEnabled", Sdf.ValueTypeNames.Bool).Set(True)
-            mass_attr = prim.CreateAttribute("omniphysics:mass", Sdf.ValueTypeNames.Float)
-            UsdShade.MaterialBindingAPI.Apply(prim)
-        else:
-            UsdPhysics.RigidBodyAPI.Apply(prim)
-            mass_attr = UsdPhysics.MassAPI.Apply(prim).CreateMassAttr()
+        UsdPhysics.RigidBodyAPI.Apply(prim)
+        mass_attr = UsdPhysics.MassAPI.Apply(prim).CreateMassAttr()
 
         m = proto["metrics"]
         for key, value in [
@@ -338,41 +249,25 @@ def export_stage(
         lo, hi = verts.min(axis=0), verts.max(axis=0)
         mesh.CreateExtentAttr([Gf.Vec3f(*lo), Gf.Vec3f(*hi)])
         UsdShade.MaterialBindingAPI.Apply(mesh.GetPrim())
-        if deformable:
-            # render mesh skinned to the simulation mesh through the bind pose
-            _set_bind_pose(mesh.GetPrim(), verts)
-            _make_tet_mesh(stage, root_path + "/sim", proto["tet_points"], proto["tets"])
-        else:
-            # the collider: a reduced convex hull, not the render mesh (see collision_hull)
-            hp, ht = collision_hull(verts)
-            col = UsdGeom.Mesh.Define(stage, root_path + "/collision")
-            col.CreatePointsAttr(Vt.Vec3fArray.FromNumpy(hp.astype(np.float32)))
-            col.CreateFaceVertexCountsAttr(Vt.IntArray([3] * len(ht)))
-            col.CreateFaceVertexIndicesAttr(Vt.IntArray.FromNumpy(ht.astype(np.int32).ravel()))
-            col.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
-            col.CreateExtentAttr([Gf.Vec3f(*hp.min(axis=0)), Gf.Vec3f(*hp.max(axis=0))])
-            col.CreatePurposeAttr(UsdGeom.Tokens.guide)
-            UsdPhysics.CollisionAPI.Apply(col.GetPrim())
-            UsdPhysics.MeshCollisionAPI.Apply(col.GetPrim()).CreateApproximationAttr(
-                UsdPhysics.Tokens.convexHull
-            )
-            UsdShade.MaterialBindingAPI.Apply(col.GetPrim())
+        # the collider: a reduced convex hull, not the render mesh (see collision_hull)
+        hp, ht = collision_hull(verts)
+        col = UsdGeom.Mesh.Define(stage, root_path + "/collision")
+        col.CreatePointsAttr(Vt.Vec3fArray.FromNumpy(hp.astype(np.float32)))
+        col.CreateFaceVertexCountsAttr(Vt.IntArray([3] * len(ht)))
+        col.CreateFaceVertexIndicesAttr(Vt.IntArray.FromNumpy(ht.astype(np.int32).ravel()))
+        col.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+        col.CreateExtentAttr([Gf.Vec3f(*hp.min(axis=0)), Gf.Vec3f(*hp.max(axis=0))])
+        col.CreatePurposeAttr(UsdGeom.Tokens.guide)
+        UsdPhysics.CollisionAPI.Apply(col.GetPrim())
+        UsdPhysics.MeshCollisionAPI.Apply(col.GetPrim()).CreateApproximationAttr(UsdPhysics.Tokens.convexHull)
+        UsdShade.MaterialBindingAPI.Apply(col.GetPrim())
 
         geom_prim = mesh.GetPrim()
-        col_prim = None if deformable else stage.GetPrimAtPath(root_path + "/collision")
+        col_prim = stage.GetPrimAtPath(root_path + "/collision")
 
-        def bind(visual, physics, geom=geom_prim, root=prim, col=col_prim):
-            if deformable:
-                # visual material on the render mesh, physics material on the body root
-                UsdShade.MaterialBindingAPI(geom).Bind(visual)
-                UsdShade.MaterialBindingAPI(root).Bind(
-                    physics, UsdShade.Tokens.weakerThanDescendants, "physics"
-                )
-            else:
-                UsdShade.MaterialBindingAPI(geom).Bind(visual)
-                UsdShade.MaterialBindingAPI(col).Bind(
-                    physics, UsdShade.Tokens.weakerThanDescendants, "physics"
-                )
+        def bind(visual, physics, geom=geom_prim, col=col_prim):
+            UsdShade.MaterialBindingAPI(geom).Bind(visual)
+            UsdShade.MaterialBindingAPI(col).Bind(physics, UsdShade.Tokens.weakerThanDescendants, "physics")
 
         if not states:
             mass_attr.Set(float(proto["mass"]))

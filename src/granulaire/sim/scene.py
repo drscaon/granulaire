@@ -70,7 +70,8 @@ class Scene:
 def find_usd(path) -> Path:
     path = Path(path)
     if path.is_dir():
-        found = sorted(path.glob("granulaire_*.usd*"))
+        # the file itself, not the OmniPhysics layer over it
+        found = sorted(p for p in path.glob("granulaire_*.usd*") if not p.stem.endswith("_omniphysics"))
         if not found:
             raise FileNotFoundError(f"no granulaire_*.usd* file in {path}")
         return found[0]

@@ -87,10 +87,9 @@ runs off) and the cherry tomatoes (water beads on the waxy skin).
 > **Works only with NVIDIA OmniPhysics, and not tested yet.** Deformable
 > simulation of `packing_peanuts` and `cherry_tomatoes` requires an engine that
 > reads NVIDIA's OmniPhysics deformable schema: Omniverse Kit and Isaac Sim 5 or
-> later, where PhysX runs it on the GPU. Other tools (Blender, usdview, MuJoCo,
-> Bullet, engines reading only standard UsdPhysics) open the file but see these
-> grains as **static meshes with no physics**. For those, export with
-> `--no-deformable` to get ordinary rigid bodies.
+> later, where PhysX runs it on the GPU. Everything else (Blender, usdview,
+> MuJoCo, Bullet, engines reading only standard UsdPhysics) reads the file
+> itself, where these grains are **ordinary rigid bodies**.
 >
 > Granulaire is developed without an NVIDIA GPU: the files are checked to be
 > valid OpenUSD with the documented schemas and attributes, but they have
@@ -103,28 +102,39 @@ bodies only ([UsdPhysics overview](https://openusd.org/dev/api/usd_physics_page_
 the AOUSD Physics Working Group lists deformable and soft bodies only as a
 possible future extension
 ([charter](https://project.linuxfoundation.org/hubfs/AOUSD/Charters/24.12.16%20AOUSD%20Physics%20Working%20Group%20Charter%20-%20Approved.pdf)).
-Deformable presets therefore follow NVIDIA's **OmniPhysics deformable
-schema** ([reference](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/dev_guide/deformables/deformable_bodies.html)),
-built on the core `UsdGeom.TetMesh`:
+The file `granulaire_<preset>.usdc` therefore holds plain OpenUSD and
+`UsdPhysics` only, with these grains as rigid bodies. What makes them
+deformable follows NVIDIA's **OmniPhysics deformable schema**
+([reference](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/dev_guide/deformables/deformable_bodies.html)),
+built on the core `UsdGeom.TetMesh`, and is written as a layer over the file,
+`granulaire_<preset>_omniphysics.usdc`. Open the layer instead of the file
+(Isaac Sim: File > Open) and each grain becomes:
 
 ```
 /World/Prototypes/Grain_000   Xform  + OmniPhysicsDeformableBodyAPI (omniphysics:mass)
+                                     - PhysicsRigidBodyAPI, PhysicsMassAPI (removed by the layer)
   geom                        Mesh   + OmniPhysicsDeformablePoseAPI:custom (bind pose)
+  collision                   the rigid collider, deactivated by the layer
   sim                         TetMesh + OmniPhysicsVolumeDeformableSimAPI
                                       + OmniPhysicsDeformablePoseAPI:custom
                                       + PhysicsCollisionAPI
-/World/Looks/Phys             Material + OmniPhysicsBaseMaterialAPI (density, friction)
+/World/Looks/Soft             Material + OmniPhysicsBaseMaterialAPI (density, friction)
                                        + OmniPhysicsDeformableMaterialAPI
                                          (Young's modulus, Poisson's ratio)
                                        + PhysxDeformableMaterialAPI
                                          (elasticity damping)
 ```
 
+The layer has the file as its only sublayer. `python -m granulaire.omniphysics
+<folder>` checks its structure (every grain deformable and no longer rigid,
+simulation mesh and rest shape, mass equal to the file's, deformable
+material); the OpenUSD validators run on it in CI.
+
 - The simulation mesh fills the grain's volume with tetrahedra (voxels split
   into 6 tetrahedra each, ~1,300–1,400 per grain); the render mesh follows it
   through the bind pose. The tetrahedral volume matches the surface within a
   few percent.
-- The schemas are applied by name, so the file stays valid OpenUSD in any
+- The schemas are applied by name, so the layer stays valid OpenUSD in any
   tool, but only OmniPhysics acts on them. `usd-core` does not list
   unregistered schemas in `GetAppliedSchemas()`, but they are in the file
   (`apiSchemas` metadata).
@@ -132,7 +142,7 @@ built on the core `UsdGeom.TetMesh`:
   API); if a newer Omniverse release renames attributes, re-export with an
   updated Granulaire. If OpenUSD standardises deformables, the export will move
   to that schema.
-- `--no-deformable` exports the same presets as rigid bodies.
+- `--no-deformable` does not write the layer (and skips the tetrahedral meshes).
 - **Bounce.** Deformable materials have no restitution: a grain bounces
   through its own elasticity, and `physxDeformableMaterial:elasticityDamping`
   (1/s) sets how much energy each deformation loses. The values below are
