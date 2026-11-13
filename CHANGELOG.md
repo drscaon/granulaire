@@ -29,6 +29,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `examples/`: four short scripts, each explained by its own comments (a first
+  pack and its ground truth, one aspect switched off, reading the file with
+  OpenUSD alone, the pile test in MuJoCo); a test runs each one.
+- The generated sizes are checked against the preset's grading curve: the
+  tests draw 2000 sizes per preset and compare them with the target law
+  (Kolmogorov–Smirnov) and check that each grain has the size that was drawn.
+  `manifest.json` gains `grading` in its summary: the pack's sizes against the
+  target, with the statistic and its p-value (`granulaire.generator.grading`).
 - What was measured on each grain is written in the file as
   `primvaria:measured:<name>` (`mass_kg`, `mass_<state>_kg`, `volume_m3`, `sphericity`, `convexity`, `angularity_deg`, the three axes…).
 - `python -m granulaire.conformance` also checks every pack it finds: the table must
@@ -50,6 +58,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - `python -m granulaire.conformance`: checks files against the contract (stage
   units, model hierarchy, identity). Run in the tests and, in CI, on every
   preset.
+
+### Changed
+
+- The README is a third of its former length; the detail moved, unchanged, to
+  `docs/`: `usage.md`, `openusd.md`, `physics.md`, `limits.md`,
+  `development.md`. [primvaria.com/granulaire](https://primvaria.com/granulaire/)
+  is built from these files.
+- Limits: no angle of repose is published for any preset. Two CPU tests in
+  MuJoCo (lifted cylinder, tilting bed) did not reproduce real materials, and
+  the limit is written down instead of a number.
+- Continuous integration runs the checks shared by the four generators
+  (Primvaria's reusable workflow).
 
 ## [0.3.0b1] - 2026-11-11 (beta)
 
