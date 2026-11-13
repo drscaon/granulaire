@@ -132,6 +132,11 @@ gravel = generate_scene("crushed_gravel", shapes=20, copies=10, shuffle=False, s
 write_outputs(gravel, "output")  # -> output/crushed_gravel/
 ```
 
+Four short scripts in [`examples/`](https://github.com/drscaon/granulaire/tree/main/examples)
+show the rest, each explained by its own comments: a first pack and its
+ground truth, one aspect switched off, reading the file with OpenUSD alone,
+and the pile test in MuJoCo.
+
 ### Scene size and mixing
 
 | Option (CLI / Python) | Default | Effect |
