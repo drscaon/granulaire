@@ -1,0 +1,65 @@
+{
+ "package": "granulaire",
+ "cases": [
+  {
+   "name": "crushed_gravel_moisture",
+   "args": [
+    "generate",
+    "--preset",
+    "crushed_gravel",
+    "--shapes",
+    "6",
+    "--copies",
+    "2",
+    "--moisture",
+    "--seed",
+    "7"
+   ]
+  },
+  {
+   "name": "beach_sand",
+   "args": [
+    "generate",
+    "--preset",
+    "beach_sand",
+    "--shapes",
+    "4",
+    "--copies",
+    "1",
+    "--seed",
+    "3"
+   ]
+  },
+  {
+   "name": "cherry_tomatoes_deformable",
+   "args": [
+    "generate",
+    "--preset",
+    "cherry_tomatoes",
+    "--shapes",
+    "3",
+    "--copies",
+    "1",
+    "--deformable",
+    "--seed",
+    "5"
+   ]
+  },
+  {
+   "name": "crushed_gravel_shape_off",
+   "args": [
+    "generate",
+    "--preset",
+    "crushed_gravel",
+    "--shapes",
+    "6",
+    "--copies",
+    "2",
+    "--moisture",
+    "--no-shape",
+    "--seed",
+    "7"
+   ]
+  }
+ ]
+}
