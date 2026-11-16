@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-from . import moisture
+from . import declared, moisture
 from .measure import measure
 from .pack import write_pack
 from .presets import PRESETS
@@ -390,13 +390,14 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
         w = csv.writer(f)
         extra = [f"mass_{s}_kg" for s in states] if states else []
         w.writerow(["prototype", "mineral", "mass_kg", "facets", "roundness_p"] + keys + extra)
+        rock = declared.body(scene.preset) == "rock"  # only a rock has facets and a roundness
         for i, p in enumerate(protos):
             row = [
                 i,
                 p["mineral"],
                 f"{p['mass']:.6e}",
-                p["params"]["facets"],
-                f"{p['params']['roundness_p']:.2f}",
+                p["params"]["facets"] if rock else "",
+                f"{p['params']['roundness_p']:.2f}" if rock else "",
             ] + [f"{p['metrics'][k]:.6g}" for k in keys]
             if states:
                 row += [f"{p['moisture'][s]['mass']:.6e}" for s in states]

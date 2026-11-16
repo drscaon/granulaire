@@ -6,8 +6,24 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed values
+
+- A grain records only the drawn values its body uses (PRV-34). No longer
+  recorded: `aspect_ratio` for a rock or a superellipsoid (always 1, unused);
+  `facets` and `roundness_p` for anything but a rock; `elongation` for a
+  cylinder, a tube or a sphere; `flatness`, `lumpiness`, `taper`, `chips` and
+  `pits` for a sphere (glass beads); `taper` and `chips` for a tube. The
+  draws and the grains are unchanged. `prototype_metrics.csv` leaves
+  `facets` and `roundness_p` empty for a grain that is not a rock.
+
 ### Added
 
+- `docs/variation.md`: how every drawn value follows its preset, which values
+  each kind of grain records, and every preset's numbers, written from
+  `granulaire/declared.py` and the presets; `tests/test_distributions.py`
+  draws 2000 grains of every preset and checks each value's range and
+  distribution, and that a grain records exactly the values of its body
+  (PRV-34).
 - Reproducibility references (`tests/test_golden.py`, shared by the four
   generators): four cases of fixed preset, seed and options whose pack tables
   must give the same drawn and measured values on every Python and platform
