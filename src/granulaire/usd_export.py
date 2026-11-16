@@ -38,6 +38,8 @@ from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdSemantics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
 from .contract import set_group, write_identity, write_labels, write_measured, write_variation
+from .declared import DECLARED
+from .declared import body as declared_body
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
 
@@ -127,14 +129,17 @@ DRAWN = (
 
 
 def drawn_values(proto) -> dict:
-    """What was drawn for a prototype: its shape parameters, its mineral and its colour."""
+    """What was drawn for a prototype: its shape parameters, its mineral and its colour. Only the
+    values its body uses are written (declared.py): a glass bead is an exact sphere, so its
+    elongation is not one of them."""
     params = proto.get("params", {})
     values = {name: params[name] for name in DRAWN if name in params}
     if "aspect" in values:  # the grain's width over thickness, not a variation aspect
         values["aspect_ratio"] = values.pop("aspect")
     values["mineral"] = proto.get("mineral")
     values["color_rgb"] = proto.get("color")
-    return values
+    used = {name for name, _aspect, _rule, bodies in DECLARED if declared_body(params) in bodies}
+    return {name: value for name, value in values.items() if name in used}
 
 
 # measured on each generated prototype (measure.py): the names they are written under

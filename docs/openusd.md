@@ -54,7 +54,7 @@ it on every preset.
 What was drawn for each grain is in the file too, its ground truth:
 `primvaria:variation:aspects` lists the aspects that were switched on
 (`size`, `shape`, `roundness`, `mineralogy`, `orientation`, `moisture`) and `primvaria:variation:<name>` holds each drawn value
-(`diameter_m`, `elongation`, `flatness`, `facets`, `roundness_p`, `chips`, `pits`, `mineral`, `color_rgb`…). They are written on the prototype; a grain adds its own drawn `moisture` state, and its orientation is its transform. An aspect that is switched off is still recorded, at its
+(`diameter_m`, `elongation`, `flatness`, `facets`, `roundness_p`, `chips`, `pits`, `mineral`, `color_rgb`…; only those its body uses, see [variation.md](variation.md)). They are written on the prototype; a grain adds its own drawn `moisture` state, and its orientation is its transform. An aspect that is switched off is still recorded, at its
 nominal value, and the other aspects keep their draws.
 
 What was measured on each grain once generated is there as well, as
