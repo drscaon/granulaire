@@ -4,10 +4,11 @@ Scene layout (units: metres, kilograms, Z up):
 
 /World
   /PhysicsScene
-  /Looks/Mat_000[_<state>]     UsdPreviewSurface materials (prototype x state)
-  /Looks/Phys[_<state>]        physics materials (friction, restitution)
   /Prototypes        (class)   N shapes, not rendered directly
     /Grain_000                 RigidBody + Mass + granulaire:* attributes
+      /Looks/Mat[_<state>]     its UsdPreviewSurface materials (one per state), and
+      /Looks/Phys[_<state>]    its physics materials (friction, restitution): inside the
+                               prototype, so a grain referenced alone keeps them (contract, section 4)
       variantSet "moisture"    (when enabled) dry | damp | wet | saturated:
                                mass, granulaire:waterMass,
                                granulaire:capillaryCohesion, bound materials
@@ -197,7 +198,6 @@ def export_stage(
     stage.SetDefaultPrim(world.GetPrim())
     set_group(world.GetPrim(), assembly=True)
     physics_scene(stage)
-    UsdGeom.Scope.Define(stage, "/World/Looks")
 
     mu = preset.get("friction", 0.6)
     surface_rough = preset.get("surface_roughness", STATE_PARAMS["dry"]["rough"])
@@ -207,11 +207,6 @@ def export_stage(
         k_mu = STATE_PARAMS[state]["mu"] if state else 1.0
         k_e = STATE_PARAMS[state]["e"] if state else 1.0
         return _make_phys_material(stage, path, mu * k_mu, e * k_e)
-
-    if states:
-        phys = {s: phys_material(f"/World/Looks/Phys_{s}", s) for s in states}
-    else:
-        phys = {None: phys_material("/World/Looks/Phys", None)}
 
     set_group(stage.CreateClassPrim("/World/Prototypes"))
     for i, proto in enumerate(prototypes):
@@ -227,6 +222,9 @@ def export_stage(
         write_labels(prim, ("grain", preset_key or preset["label"]))  # the grains name themselves below
         write_variation(prim, aspects, drawn_values(proto))
         write_measured(prim, measured_values(proto, states))
+        looks = f"{root_path}/Looks"
+        UsdGeom.Scope.Define(stage, looks)
+        phys = {s: phys_material(f"{looks}/Phys_{s}" if s else f"{looks}/Phys", s) for s in states or [None]}
         UsdPhysics.RigidBodyAPI.Apply(prim)
         mass_attr = UsdPhysics.MassAPI.Apply(prim).CreateMassAttr()
 
@@ -277,7 +275,7 @@ def export_stage(
 
         if not states:
             mass_attr.Set(float(proto["mass"]))
-            mat = _make_material(stage, f"/World/Looks/Mat_{i:03d}", proto["color"], surface_rough)
+            mat = _make_material(stage, f"{looks}/Mat", proto["color"], surface_rough)
             mesh.CreateDisplayColorAttr([Gf.Vec3f(*proto["color"])])
             bind(mat, phys[None])
             continue
@@ -288,7 +286,7 @@ def export_stage(
             p = STATE_PARAMS[s]
             mats[s] = _make_material(
                 stage,
-                f"/World/Looks/Mat_{i:03d}_{s}",
+                f"{looks}/Mat_{s}",
                 wet_color(proto["color"], s),
                 min(p["rough"], surface_rough),
                 p["coat"],

@@ -186,7 +186,7 @@ def test_deformable_layer_with_moisture_states(tmp_path, monkeypatch):
     for state in grain.GetVariantSet("moisture").GetVariantNames():
         grain.GetVariantSet("moisture").SetVariantSelection(state)
         material = UsdShade.MaterialBindingAPI(grain).ComputeBoundMaterial("physics")[0]
-        assert material.GetPath() == f"/World/Looks/Soft_{state}"
+        assert material.GetPath() == grain.GetPath().AppendPath(f"Looks/Soft_{state}")  # inside the grain
         masses.add(grain.GetAttribute("omniphysics:mass").Get())
     assert len(masses) == 4  # a wet grain is heavier
 
