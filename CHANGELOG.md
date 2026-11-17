@@ -18,6 +18,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The conformance check (`contract.conformance`, `python -m granulaire.conformance`,
+  shared by the four generators) checks sections 7 and 8 of the contract: a
+  variant set and its variants are named in `snake_case`, have a default
+  selection, and the set is one section 7 lists, with its meaning, for the
+  asset's generator (`contract.VARIANT_SETS`); no variant changes what identifies the asset (its `assetInfo`,
+  `primvaria:*` identity and semantic labels), each variant being selected in
+  turn on a copy of the stage; a mate frame is an `Xform` named `MateFrame` or
+  `MateFrame_<feature>`, inside an asset, in every variant; nothing is written
+  under `primvaria:mate:*`, which is not in the contract yet (PRV-35).
 - `generate --no-vary ASPECTS` and `--nominal`, as in the other generators of
   the suite: `--no-vary size,orientation` keeps those aspects nominal, and an
   unknown aspect is refused. `--no-size`, `--no-shape`… still work, and are
