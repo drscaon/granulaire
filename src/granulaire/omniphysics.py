@@ -10,8 +10,9 @@ whose only sublayer is the main file. On each prototype (and so on every grain) 
 * makes the root a deformable body (`OmniPhysicsDeformableBodyAPI`, `omniphysics:mass`);
 * adds the simulation mesh `sim`, a `UsdGeom.TetMesh` with `OmniPhysicsVolumeDeformableSimAPI`
   and the collider, and skins the render mesh to it through a bind pose;
-* binds a deformable material (`/World/Looks/Soft[_<state>]`: Young's modulus, Poisson's
-  ratio, density, friction, PhysX elasticity damping).
+* binds a deformable material (`<prototype>/Looks/Soft[_<state>]`, inside the prototype as
+  its other materials: Young's modulus, Poisson's ratio, density, friction, PhysX elasticity
+  damping).
 
 With moisture states, mass and material are written inside each `moisture` variant, as in
 the file. The API schemas are applied by name: the layer is valid OpenUSD for any tool.
@@ -110,18 +111,19 @@ def write_overlay(usd, preset, prototypes, states=None) -> Path:
     UsdPhysics.SetStageKilogramsPerUnit(stage, 1.0)
     stage.SetDefaultPrim(stage.GetPrimAtPath("/World"))
     mu = preset.get("friction", 0.6)
-    materials = {
-        s: _material(
-            stage,
-            f"/World/Looks/Soft_{s}" if s else "/World/Looks/Soft",
-            mu * (STATE_PARAMS[s]["mu"] if s else 1.0),
-            preset["density"],
-            soft,
-        )
-        for s in (states or [None])
-    }
     for i, proto in enumerate(prototypes):
         root = stage.GetPrimAtPath(f"/World/Prototypes/Grain_{i:03d}")
+        looks = f"{root.GetPath()}/Looks"
+        materials = {
+            s: _material(
+                stage,
+                f"{looks}/Soft_{s}" if s else f"{looks}/Soft",
+                mu * (STATE_PARAMS[s]["mu"] if s else 1.0),
+                preset["density"],
+                soft,
+            )
+            for s in (states or [None])
+        }
         for api in RIGID_APIS:  # no longer a rigid body
             root.RemoveAppliedSchema(api)
         root.GetChild("collision").SetActive(False)  # nor its convex-hull collider

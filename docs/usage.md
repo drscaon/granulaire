@@ -118,7 +118,7 @@ built on the core `UsdGeom.TetMesh`, and is written as a layer over the file,
   sim                         TetMesh + OmniPhysicsVolumeDeformableSimAPI
                                       + OmniPhysicsDeformablePoseAPI:custom
                                       + PhysicsCollisionAPI
-/World/Looks/Soft             Material + OmniPhysicsBaseMaterialAPI (density, friction)
+  Looks/Soft                  Material + OmniPhysicsBaseMaterialAPI (density, friction)
                                        + OmniPhysicsDeformableMaterialAPI
                                          (Young's modulus, Poisson's ratio)
                                        + PhysxDeformableMaterialAPI

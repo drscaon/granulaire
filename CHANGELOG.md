@@ -18,6 +18,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The conformance check (shared by the four generators) checks that an asset
+  is whole on its own (contract, section 4): every relationship or connection
+  inside an asset root (a material binding, a physics material, a joint's
+  bodies) points inside it, in every variant (PRV-40).
 - The conformance check (`contract.conformance`, `python -m granulaire.conformance`,
   shared by the four generators) checks sections 7 and 8 of the contract: a
   variant set and its variants are named in `snake_case`, have a default
@@ -41,6 +45,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
   generators): four cases of fixed preset, seed and options whose pack tables
   must give the same drawn and measured values on every Python and platform
   of the CI. Contract, section 6, rule 1 (PRV-32).
+
+### Breaking changes
+
+- A prototype's materials are inside it: `Grain_NNN/Looks/Mat[_<state>]` and
+  `Looks/Phys[_<state>]`, instead of `/World/Looks/Mat_NNN[_<state>]` and a
+  shared `/World/Looks/Phys[_<state>]`; the OmniPhysics layer's deformable
+  material too (`Looks/Soft[_<state>]`). A grain referenced alone into
+  another stage lost its colour and its friction; it now keeps them
+  (PRV-40). The values are unchanged.
 
 ## [0.4.0b1] - 2026-11-13 (beta)
 
