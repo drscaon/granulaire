@@ -109,7 +109,7 @@ granulaire list
 granulaire generate --preset beach_sand          # 100 shapes × 5 copies, shuffled
 granulaire generate --preset beach_sand --shapes 20 --copies 10 --no-shuffle --seed 3
 granulaire generate --preset beach_pebbles --moisture --moisture-weights 0,20,50,30
-granulaire generate --preset rounded_gravel --no-size --no-orientation
+granulaire generate --preset rounded_gravel --no-vary size,orientation
 granulaire render output/beach_sand output/crushed_gravel
 granulaire render-moisture output/beach_pebbles output/crushed_gravel output/beach_sand
 granulaire render-gallery output/beach_sand output/crushed_gravel --grains 5
@@ -140,17 +140,22 @@ and the pile test in MuJoCo.
 
 ### Variations (checkboxes)
 
-| Option | On | Off |
+`--no-vary ASPECTS` keeps aspects nominal (comma-separated), `--nominal`
+keeps them all nominal, as in the other generators of the suite. In Python:
+`Variations(shape=False)`.
+
+| Aspect | On (default) | Off (`--no-vary <aspect>`) |
 |---|---|---|
-| `--size` | diameter drawn from the grading curve | all at d50 |
-| `--shape` | elongation, flatness and irregularity drawn | mean values |
-| `--roundness` | facets and edge rounding drawn | median values |
-| `--mineralogy` | mineral and tint drawn | dominant mineral |
-| `--orientation` | random orientation | all aligned |
+| `size` | diameter drawn from the grading curve | all at d50 |
+| `shape` | elongation, flatness and irregularity drawn | mean values |
+| `roundness` | facets and edge rounding drawn | median values |
+| `mineralogy` | mineral and tint drawn | dominant mineral |
+| `orientation` | random orientation | all aligned |
 | `--moisture` (off by default) | variant set + state drawn per grain | no moisture |
 
 Turning one variation off does not change the other random draws: with the
-same seed you compare the same scene with a single difference.
+same seed you compare the same scene with a single difference. The options
+`--no-size`, `--no-shape`… still work, and are deprecated.
 
 ## Outputs (per preset, under `output/<preset>/`)
 

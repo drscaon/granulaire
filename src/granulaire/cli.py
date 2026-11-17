@@ -46,6 +46,21 @@ def _cmd_list(_args) -> int:
     return 0
 
 
+def _aspects(names):
+    """The type of --no-vary: a comma-separated list of aspect names, each one known."""
+
+    def parse(text: str) -> tuple:
+        got = tuple(t.strip() for t in text.split(",") if t.strip())
+        unknown = [t for t in got if t not in names]
+        if unknown:
+            raise argparse.ArgumentTypeError(
+                f"unknown aspect {', '.join(unknown)}: expected some of {','.join(names)}"
+            )
+        return got
+
+    return parse
+
+
 def _positive_int(text: str) -> int:
     value = int(text)
     if value < 1:
@@ -54,7 +69,8 @@ def _positive_int(text: str) -> int:
 
 
 def _cmd_generate(args) -> int:
-    var = Variations(**{k: getattr(args, k) for k in VARIATION_HELP}, moisture=args.moisture)
+    off = set(VARIATION_HELP) if args.nominal else set(args.no_vary)
+    var = Variations(**{k: getattr(args, k) and k not in off for k in VARIATION_HELP}, moisture=args.moisture)
     if args.moisture and not moisture_applies(args.preset):
         print(f"moisture ignored: not applicable to '{PRESETS[args.preset]['label']}'")
     scene = generate_scene(
@@ -178,7 +194,20 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--seed", type=int, default=1)
     g.add_argument("--out", default="output", help="output root folder")
     for name, text in VARIATION_HELP.items():
-        g.add_argument(f"--{name}", action=argparse.BooleanOptionalAction, default=True, help=text)
+        g.add_argument(
+            f"--{name}",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help=f"{text}; deprecated, use --no-vary {name}",
+        )
+    g.add_argument(
+        "--no-vary",
+        metavar="ASPECTS",
+        type=_aspects(tuple(VARIATION_HELP)),
+        default=(),
+        help="aspects that stay nominal, comma-separated: " + ",".join(VARIATION_HELP),
+    )
+    g.add_argument("--nominal", action="store_true", help="no aspect varies: the nominal grain")
     g.add_argument(
         "--moisture",
         action=argparse.BooleanOptionalAction,
