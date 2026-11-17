@@ -18,6 +18,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `generate --no-vary ASPECTS` and `--nominal`, as in the other generators of
+  the suite: `--no-vary size,orientation` keeps those aspects nominal, and an
+  unknown aspect is refused. `--no-size`, `--no-shape`… still work, and are
+  deprecated (PRV-35).
 - `docs/variation.md`: how every drawn value follows its preset, which values
   each kind of grain records, and every preset's numbers, written from
   `granulaire/declared.py` and the presets; `tests/test_distributions.py`
