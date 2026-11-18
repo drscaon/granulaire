@@ -174,7 +174,9 @@ same seed you compare the same scene with a single difference. The options
 The short version; the full list is in [Limits](https://github.com/drscaon/granulaire/blob/main/docs/limits.md).
 
 - Values are sensible centres to randomise around, not calibrated measurements:
-  **no angle of repose is verified** for any preset.
+  **no angle of repose is verified** for any preset. Sizes and densities come
+  from sedimentology's classes and handbooks where one applies
+  ([Sources](https://github.com/drscaon/granulaire/blob/main/docs/sources.md)).
 - Physics on CPU targets a few hundred grains, with convex-hull collision.
 - Wet grains differ by friction, restitution and mass only: no capillary cohesion.
 - Deformable grains need NVIDIA OmniPhysics and are **not tested yet**.
@@ -196,6 +198,7 @@ Conventions and continuous integration: [Development](https://github.com/drscaon
 | [Usage in depth](https://github.com/drscaon/granulaire/blob/main/docs/usage.md) | Scene size and mixing, the preset list, moisture states, deformable grains, opening a scene in Blender. |
 | [OpenUSD layout and contract](https://github.com/drscaon/granulaire/blob/main/docs/openusd.md) | The ground and physics scene, OpenUSD compliance, and what the Primvaria contract writes on every grain. |
 | [What each grain draws](https://github.com/drscaon/granulaire/blob/main/docs/variation.md) | How every drawn value follows its preset, which values each kind of grain records, and every preset's numbers, checked by a test against what the generator draws. |
+| [Sources of the physical values](https://github.com/drscaon/granulaire/blob/main/docs/sources.md) | Where every size, sorting, density, friction and moisture value comes from (sedimentology's classes, standards, handbooks, papers, or an estimate and what it rests on), checked by a test. |
 | [Physics: method, values and checks](https://github.com/drscaon/granulaire/blob/main/docs/physics.md) | How shapes are made, the friction and restitution table, the pile tests in MuJoCo and Blender, and what changes with grain size. |
 | [Limits](https://github.com/drscaon/granulaire/blob/main/docs/limits.md) | Everything Granulaire does not do or has not verified, stated plainly. |
 | [Development](https://github.com/drscaon/granulaire/blob/main/docs/development.md) | Setting up, commit and branch conventions, continuous integration. |

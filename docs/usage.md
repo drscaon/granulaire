@@ -31,7 +31,10 @@ the same.
 | Space | `lunar_regolith`, `martian_regolith` (no moisture) |
 | Reference | `glass_beads`: exact spheres, the baseline to compare real grains against |
 
-Values are realistic orders of magnitude, not measurements of a specific deposit.
+Sizes, sorting and densities come from sedimentology's classes, standards
+and handbooks where one applies; the rest are estimates. A preset is a kind of
+material, not a measurement of a specific deposit. Each value and its source:
+[Sources](sources.md).
 
 ## Moisture (OpenUSD variant set)
 

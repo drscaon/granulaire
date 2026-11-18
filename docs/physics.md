@@ -42,9 +42,11 @@ material, the one every Primvaria project gives its ground (below).
 Dynamic friction is 90 % of static friction. In wet states, friction is
 multiplied by 1.10 (damp: a little water makes grains grip), 1.00 (wet) and
 0.80 (saturated: grains slide on the water); restitution by 0.60, 0.40
-and 0.30. The values are realistic orders of magnitude, ranked sensibly
-(angular crushed rock grips more than round, polished or waxy grains), not
-measurements of a specific deposit.
+and 0.30. Where a source gives a friction (wheat kernels, glass on glass) the
+value lies within it; the others are estimates, ranked sensibly (angular
+crushed rock grips more than round, polished or waxy grains), not
+measurements of a specific deposit. Each value and its source:
+[Sources](sources.md).
 
 | Preset | Static μ (dry) | Dynamic μ (dry) | Restitution (dry) | Static μ damp | Static μ wet | Static μ saturated |
 |---|---|---|---|---|---|---|
@@ -61,7 +63,7 @@ measurements of a specific deposit.
 | `iron_ore` | 0.70 | 0.63 | 0.12 | 0.77 | 0.70 | 0.56 |
 | `coal` | 0.55 | 0.50 | 0.10 | 0.61 | 0.55 | 0.44 |
 | `rubber_mulch` | 0.85 | 0.77 | 0.55 | 0.94 | 0.85 | 0.68 |
-| `wheat` | 0.40 | 0.36 | 0.40 | 0.44 | 0.40 | 0.32 |
+| `wheat` | 0.44 | 0.40 | 0.40 | 0.48 | 0.44 | 0.35 |
 | `maize` | 0.45 | 0.41 | 0.35 | 0.50 | 0.45 | 0.36 |
 | `rice` | 0.40 | 0.36 | 0.30 | 0.44 | 0.40 | 0.32 |
 | `beans` | 0.35 | 0.32 | 0.40 | 0.39 | 0.35 | 0.28 |
@@ -72,7 +74,7 @@ measurements of a specific deposit.
 | `packing_peanuts` | 0.50 | 0.45 | 0.30 | — | — | — |
 | `lunar_regolith` | 0.75 | 0.68 | 0.05 | — | — | — |
 | `martian_regolith` | 0.70 | 0.63 | 0.05 | — | — | — |
-| `glass_beads` | 0.35 | 0.32 | 0.85 | 0.39 | 0.35 | 0.28 |
+| `glass_beads` | 0.40 | 0.36 | 0.85 | 0.44 | 0.40 | 0.32 |
 
 — : no moisture states for this preset. Packing peanuts and cherry tomatoes
 are rigid bodies in the file, with the values shown. In their OmniPhysics
@@ -170,8 +172,8 @@ rigid-body engines with default settings. Rules of thumb behind the table:
 
 | Physics risk | Presets (median nominal size · mean grain mass) | What to do |
 |---|---|---|
-| **Not usable as individual rigid bodies at real scale** (fine with scaled units, see [Physics checks](#physics-checks)) | `lunar_regolith` (0.07 mm · ~13 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
-| **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~53 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
+| **Not usable as individual rigid bodies at real scale** (fine with scaled units, see [Physics checks](#physics-checks)) | `lunar_regolith` (0.07 mm · ~12 µg), `martian_regolith` (0.12 mm · ~0.1 mg), `dune_sand` (0.22 mm · ~18 µg), `beach_sand` (0.36 mm · ~0.1 mg), `volcanic_sand` (0.49 mm · ~0.4 mg), `glass_beads` (1 mm · ~1.4 mg) | Use for rendering and perception; for physics, use a continuum model (MPM), a deformable heightfield, or scaled-up grains |
+| **Unstable without tuning** | `rice` (2.8 mm, 1.6 mm thick · ~18 mg), `plastic_pellets` (3.4 mm · ~20 mg), `wheat` (4.1 mm · ~47 mg), `rounded_gravel` (5.8 mm · ~0.4 g), `soybean` (6.6 mm · ~0.19 g), `beans` (9.1 mm, 5.8 mm thick · ~0.53 g), `maize` (7.4 mm, 4.7 mm thick · ~0.29 g), `crushed_gravel` (8.2 mm · ~1 g) | Reduce contact offsets / margins to ~1 mm, enable CCD, use substeps or a smaller time step |
 | **Workable with tuning** | `packing_peanuts` (20 mm, ~9 mm thick · ~50 mg, extremely light), `wood_pellets` (9.8 mm, 6 mm thick · ~0.6 g), `pozzolana` (11 mm · ~1.5 g, very light), `marble_chips` (11.5 mm · ~2.5 g), `iron_ore` (16 mm · ~17 g), `rubber_mulch` (20 mm, 12 mm thick · ~6 g), `cherry_tomatoes` (25 mm · ~8 g, deformable) | Same settings as above; check stability against the heaviest body in contact |
 | **Generally fine** | `coal` (23 mm · ~15 g), `beach_pebbles` (38 mm, 18 mm thick · ~140 g), `railway_ballast` (40 mm · ~100 g), `river_pebbles` (46 mm · ~230 g) | Keep CCD on for impacts; in Blender, lower the default 0.04 m margin |
 
