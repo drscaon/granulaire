@@ -8,6 +8,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed values
 
+- Every physical value now names its source (PRV-33), and the values that
+  did not match theirs were corrected: `wheat` density 1400 → 1250 kg/m³
+  (kernel true density, 1177 to 1333) and friction 0.40 → 0.44 (0.41 to
+  0.62 on wood); `lunar_regolith` density 3100 → 2920 kg/m³ (JSC-1A's
+  specific gravity, 2.92); `glass_beads` friction 0.35 → 0.40 (glass on
+  glass, about 22°). Comments corrected to Folk's sorting classes:
+  `volcanic_sand` is moderately well sorted, the regoliths poorly sorted.
 - A grain records only the drawn values its body uses (PRV-34). No longer
   recorded: `aspect_ratio` for a rock or a superellipsoid (always 1, unused);
   `facets` and `roundness_p` for anything but a rock; `elongation` for a
@@ -18,6 +25,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `docs/sources.md` and `granulaire/sources.py`: the source of every physical
+  value (sedimentology's size and sorting classes, EN 13450 for ballast,
+  mineral and kernel densities, friction angles, or an estimate with what it
+  rests on) and the range each source gives. `tests/test_sources.py` fails
+  on a value with no source, on a value outside its source's range, and when
+  the page is not the module's tables (PRV-33).
 - The conformance check (shared by the four generators) checks that an asset
   is whole on its own (contract, section 4): every relationship or connection
   inside an asset root (a material binding, a physics material, a joint's

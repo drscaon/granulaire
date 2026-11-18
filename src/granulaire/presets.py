@@ -33,8 +33,10 @@ rather than a single shape:
 - sphere: True for exact spheres (glass beads, the reference);
 - category: display family (see CATEGORIES).
 
-Values are realistic orders of magnitude, not measurements of a specific
-deposit.
+Every physical value names its source in sources.py (docs/sources.md): a
+standard's table, a handbook or a paper where one was found, otherwise an
+estimate with what it rests on. A preset is a kind of material, not a
+measurement of a specific deposit.
 """
 
 # display order of the categories
@@ -106,7 +108,7 @@ PRESETS = {
         "category": "Sand",
         "label": "Volcanic sand",
         "phi_mean": 1.0,  # ~0.5 mm
-        "phi_std": 0.60,  # moderately sorted
+        "phi_std": 0.60,  # moderately well sorted
         "elongation_beta": (6.0, 3.0),
         "flatness_beta": (6.0, 3.0),
         "facets": (10, 22),
@@ -414,8 +416,8 @@ PRESETS = {
         "facets": (4, 4),  # unused for kernels
         "roundness_p": (1.0, 1.0),
         "roughness": 0.0,
-        "density": 1400.0,  # kernel true density
-        "friction": 0.40,
+        "density": 1250.0,  # kernel true density
+        "friction": 0.44,
         "restitution": 0.40,
         "absorption": 0.30,  # kernels swell when soaked
         "subdivisions": 4,
@@ -665,7 +667,7 @@ PRESETS = {
         "category": "Space",
         "label": "Lunar regolith (simulant)",
         "phi_mean": 3.8,  # ~0.07 mm: silt / very fine sand
-        "phi_std": 1.20,  # very poorly sorted
+        "phi_std": 1.20,  # poorly sorted
         "elongation_beta": (5.0, 3.0),
         "flatness_beta": (5.0, 3.0),
         "facets": (6, 16),
@@ -677,7 +679,7 @@ PRESETS = {
         "pits": (1, 5),
         "pit_depth": (0.1, 0.25),
         "pit_size": (0.2, 0.4),
-        "density": 3100.0,  # particle density
+        "density": 2920.0,  # particle density
         "friction": 0.75,
         "restitution": 0.05,
         "absorption": 0.0,
@@ -694,7 +696,7 @@ PRESETS = {
         "category": "Space",
         "label": "Martian regolith (simulant)",
         "phi_mean": 3.0,  # ~0.125 mm
-        "phi_std": 1.30,  # very poorly sorted
+        "phi_std": 1.30,  # poorly sorted
         "elongation_beta": (5.0, 3.0),
         "flatness_beta": (5.0, 3.0),
         "facets": (6, 18),
@@ -732,7 +734,7 @@ PRESETS = {
         "roundness_p": (1.0, 1.0),
         "roughness": 0.0,
         "density": 2500.0,  # soda-lime glass
-        "friction": 0.35,
+        "friction": 0.40,
         "restitution": 0.85,
         "absorption": 0.0,
         "subdivisions": 4,
