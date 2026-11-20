@@ -6,6 +6,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0b1] - 2026-11-20 (beta)
+
+### Breaking changes
+
+- A prototype's materials are inside it: `Grain_NNN/Looks/Mat[_<state>]` and
+  `Looks/Phys[_<state>]`, instead of `/World/Looks/Mat_NNN[_<state>]` and a
+  shared `/World/Looks/Phys[_<state>]`; the OmniPhysics layer's deformable
+  material too (`Looks/Soft[_<state>]`). A grain referenced alone into
+  another stage lost its colour and its friction; it now keeps them
+  (PRV-40). The values are unchanged.
+
 ### Changed values
 
 - Every physical value now names its source (PRV-33), and the values that
@@ -58,15 +69,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
   generators): four cases of fixed preset, seed and options whose pack tables
   must give the same drawn and measured values on every Python and platform
   of the CI. Contract, section 6, rule 1 (PRV-32).
-
-### Breaking changes
-
-- A prototype's materials are inside it: `Grain_NNN/Looks/Mat[_<state>]` and
-  `Looks/Phys[_<state>]`, instead of `/World/Looks/Mat_NNN[_<state>]` and a
-  shared `/World/Looks/Phys[_<state>]`; the OmniPhysics layer's deformable
-  material too (`Looks/Soft[_<state>]`). A grain referenced alone into
-  another stage lost its colour and its friction; it now keeps them
-  (PRV-40). The values are unchanged.
 
 ## [0.4.0b1] - 2026-11-13 (beta)
 
