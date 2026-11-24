@@ -120,7 +120,8 @@ jobs:
         run: pip install -e .
       - name: Generate the presets
         run: |
-          for preset in $(python .github/ci_presets.py granulaire.presets); do
+          # cherry_tomatoes: a deformable preset in every sample, for the OmniPhysics step
+          for preset in $(python .github/ci_presets.py granulaire.presets cherry_tomatoes); do
             granulaire generate --preset "$preset" --shapes 3 --copies 1 --moisture --out ci-usd > /dev/null
           done
       - name: Validate every file (what usdchecker runs)
