@@ -20,6 +20,23 @@ and Quincaillerie; a test checks every generated file against it. The MuJoCo
 checks and the Blender rigid-body checks take the ground's friction from the
 file (Blender's cloth, in Maillage, has its own collision settings).
 
+## Newton layer
+
+The file holds plain OpenUSD and `UsdPhysics`. What Newton needs and cannot
+guess from it is a layer beside it, `granulaire_<preset>_newton.usda`, whose
+only sublayer is the file: on each prototype's collider, and so on every
+grain, `newton:contactGap`, the distance from which contacts are generated.
+It is a quarter of the prototype's smallest extent, at most 0.5 mm (sand:
+about 0.05 mm). Newton's own default, 0.1 m, is meant for robots: with grains
+it floods the contact buffer. Packing peanuts and cherry tomatoes stay rigid
+in this layer; their deformable form is the OmniPhysics layer's.
+
+`python -m granulaire.newton <folder>` checks the layer. Primvaria's CI opens
+it in Newton 1.8 on CPU, with its XPBD solver, for every preset: every grain
+at rest on the ground, the mass as in the pack. `generate --engines` chooses
+the layers (`newton`, `omniphysics`, both, or `none`; the default also names
+`physx`, a layer Granulaire has nothing for).
+
 ## OpenUSD compliance
 
 ```bash

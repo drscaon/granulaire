@@ -638,4 +638,5 @@ Part of the [Granulaire](../README.md) documentation.
 - `moisture.RHO_WATER`: the density of water (998 kg/m³ at 20 °C), rounded.
 - `moisture.DEFAULT_WEIGHTS`: how often each moisture state is drawn: a choice.
 - `ground.GROUND_*`: the shared ground of the Primvaria suite (ground.py), the same in every generator.
+- `newton.GAP_MAX, GAP_SHARE`: the contact gap of the Newton layer (a quarter of a grain, at most 0.5 mm): an engine setting, not a property of the grains.
 <!-- sources: end -->

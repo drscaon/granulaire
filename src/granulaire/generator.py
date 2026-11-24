@@ -19,6 +19,7 @@ import numpy as np
 from scipy import stats
 
 from . import declared, moisture
+from .contract import ENGINES
 from .measure import measure
 from .pack import write_pack
 from .presets import PRESETS
@@ -357,9 +358,16 @@ def summarize(scene: Scene) -> dict:
     return summary
 
 
-def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
+def write_outputs(scene: Scene, out_root: str | Path = "output", engines=ENGINES) -> Path:
     """Write the USD scene, the pack's table and manifest (instances.csv, manifest.json), the
-    prototype table and the mesh archive. Returns the folder."""
+    prototype table and the mesh archive. Returns the folder.
+
+    engines: the engine layers written beside the file, among ENGINES (contract, section 9);
+    Granulaire writes "newton" always and "omniphysics" for deformable presets, and has nothing
+    for "physx"."""
+    unknown = set(engines) - set(ENGINES)
+    if unknown:
+        raise ValueError(f"unknown engine {sorted(unknown)[0]!r}; expected some of {', '.join(ENGINES)}")
     out = Path(out_root) / scene.preset_key
     out.mkdir(parents=True, exist_ok=True)
     protos, states = scene.prototypes, scene.states
@@ -378,12 +386,17 @@ def write_outputs(scene: Scene, out_root: str | Path = "output") -> Path:
     )
 
     # what makes peanuts and tomatoes deformable is a layer over the file (omniphysics.py)
-    from .omniphysics import overlay_path, write_overlay
+    from . import newton, omniphysics
 
-    if scene.deformable:
-        write_overlay(usd_path, scene.preset, protos, states)
+    if scene.deformable and "omniphysics" in engines:
+        omniphysics.write_overlay(usd_path, scene.preset, protos, states)
     else:
-        overlay_path(usd_path).unlink(missing_ok=True)
+        omniphysics.overlay_path(usd_path).unlink(missing_ok=True)
+    # what Newton needs and cannot guess (contact gaps): a layer over the file (newton.py)
+    if "newton" in engines:
+        newton.write_overlay(usd_path)
+    else:
+        newton.overlay_path(usd_path).unlink(missing_ok=True)
 
     keys = list(protos[0]["metrics"].keys())
     with open(out / "prototype_metrics.csv", "w", newline="") as f:

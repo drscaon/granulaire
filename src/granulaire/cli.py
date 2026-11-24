@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 from . import __version__, moisture
+from .contract import ENGINES, engine_list
 from .generator import Variations, generate_scene, moisture_applies, summarize, write_outputs
 from .presets import CATEGORIES, PRESETS
 
@@ -83,7 +84,7 @@ def _cmd_generate(args) -> int:
         args.deformable,
         args.shuffle,
     )
-    out = write_outputs(scene, args.out)
+    out = write_outputs(scene, args.out, engines=args.engines)
     summary = summarize(scene)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     print(f"written to {out}")
@@ -225,6 +226,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="deformable presets (packing peanuts, cherry tomatoes): also write the NVIDIA OmniPhysics "
         "layer that makes them deformable in Omniverse / Isaac Sim (the file itself holds rigid bodies)",
+    )
+    g.add_argument(
+        "--engines",
+        type=engine_list,
+        default=ENGINES,
+        metavar="LIST",
+        help=f"engine layers beside each file, comma-separated, or none (default: {','.join(ENGINES)})",
     )
     g.set_defaults(func=_cmd_generate)
 
