@@ -50,6 +50,11 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    # the tests of 8 s or more: engine runs, examples, every preset; CI runs them before a
+    # release (and on demand), and on every commit only the others: pytest -m "not slow"
+    "slow: a test of 8 s or more, run before a release, not on every commit",
+]
 filterwarnings = [
     # scikit-image's marching cubes on NumPy >= 2.5 (third-party, harmless)
     "ignore:Setting the shape on a NumPy array:DeprecationWarning:skimage",

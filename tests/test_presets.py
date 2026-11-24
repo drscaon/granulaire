@@ -52,6 +52,7 @@ def test_material_families_have_distinct_shapes():
     assert mean_convexity("pozzolana") < mean_convexity("dune_sand") - 0.01
 
 
+@pytest.mark.slow
 def test_beach_pebbles_are_flatter_and_river_pebbles_rounder():
     from granulaire import generate_scene
 
