@@ -71,12 +71,14 @@ PRIMVARIA_GOLDEN_UPDATE=1 pytest tests/test_golden.py
 
 ### Continuous integration
 
+CI runs at two levels. On every commit (push to `main`, pull request), the fast level: the tests not marked `slow` (`pytest -m "not slow"`), on Linux and Python 3.12 only, and the engine checks on two presets, the first one and one picked from the commit's hash (`.github/ci_presets.py`; the same pair each time a commit is run, all presets over successive commits). Before a release, and with **Run workflow** on the Actions page, the full level: every test on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows), the oldest supported OpenUSD, and the engine checks on every preset. `release.yml` runs the full level first and releases nothing unless it passes. A test is marked `slow` when it takes 8 s or more; run them locally with plain `pytest`.
+
 GitHub Actions runs these workflows (`.github/workflows/`):
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every push to `main`, every pull request | `ruff check` and `ruff format --check`; `pytest` on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows); a command-line smoke test; **the MuJoCo and Blender pile tests, the OpenUSD validators and the Primvaria contract check on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
-| `release.yml` | a pushed tag `v*` | checks the tag matches the version in `pyproject.toml`, tests, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
+| `ci.yml` | every push to `main` and pull request (fast level); before a release and on **Run workflow** (full level) | `ruff check` and `ruff format --check`; `pytest` on Python 3.11–3.13 (Linux) and 3.12 (macOS, Windows) at the full level; a command-line smoke test; **the MuJoCo and Blender pile tests, the OpenUSD validators and the Primvaria contract check on every preset**; build the wheel and sdist, `twine check`, install the wheel in a clean environment. The packages are kept as a run artifact for 14 days. |
+| `release.yml` | a pushed tag `v*` | runs `ci.yml` at its full level, checks the tag matches the version in `pyproject.toml`, builds, then creates the GitHub release with the packages attached and the notes taken from `CHANGELOG.md`. Versions with `a`, `b` or `rc` are marked as pre-releases. If the release already exists (created on the web page), the packages are added to it. |
 | Dependabot | monthly | pull requests to update the GitHub Actions and the Python dependencies. |
 
 Ruff is pinned in CI so that a new ruff release cannot fail the build on

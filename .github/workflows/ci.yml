@@ -1,13 +1,32 @@
 name: CI
 
+# Two levels. On a commit (push to main, pull request): the fast tests (pytest -m "not
+# slow") on Ubuntu and Python 3.12, and the engine checks on a sample of the presets
+# (.github/ci_presets.py). Before a release (release.yml calls this workflow with
+# full: true) and with the "Run workflow" button: every test on Linux, Windows and macOS
+# and on every Python, the oldest OpenUSD, and the engine checks on every preset.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      full:
+        description: Every test, platform and preset (as before a release)
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      full:
+        description: Every test, platform and preset
+        type: boolean
+        default: true
 
 permissions:
   contents: read
+
+env:
+  FULL: ${{ inputs.full && 'true' || 'false' }}  # read by .github/ci_presets.py and the steps
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -20,6 +39,7 @@ jobs:
     # the same in the four generators, written once in the primvaria repository
     uses: drscaon/primvaria/.github/workflows/generator-checks.yml@main
     with:
+      full: ${{ inputs.full || false }}
       package: granulaire
       smoke: |
         granulaire --version
@@ -28,7 +48,7 @@ jobs:
         python -m granulaire.validate ci-output
 
   sim:
-    name: MuJoCo pile test of every preset
+    name: MuJoCo pile test of the presets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,9 +59,9 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install
         run: pip install -e ".[sim]"
-      - name: Pile test of every preset
+      - name: Pile test of the presets
         run: |
-          for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
+          for preset in $(python .github/ci_presets.py granulaire.presets); do
             granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-sim > /dev/null
           done
           granulaire sim-test ci-sim/*
@@ -55,7 +75,7 @@ jobs:
           retention-days: 14
 
   blender:
-    name: Blender pile test of every preset (bpy, Python 3.13)
+    name: Blender pile test of the presets (bpy, Python 3.13)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -73,9 +93,9 @@ jobs:
         run: pip install -e ".[dev,blender]"
       - name: Blender test
         run: pytest tests/test_physics.py -v -k blender
-      - name: Pile test of every preset
+      - name: Pile test of the presets
         run: |
-          for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
+          for preset in $(python .github/ci_presets.py granulaire.presets); do
             granulaire generate --preset "$preset" --shapes 20 --copies 2 --moisture --no-deformable --out ci-blender > /dev/null
           done
           granulaire blender-test ci-blender/*
@@ -87,7 +107,7 @@ jobs:
           retention-days: 14
 
   openusd:
-    name: OpenUSD validators of every preset
+    name: OpenUSD validators of the presets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -98,9 +118,9 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install
         run: pip install -e .
-      - name: Generate every preset
+      - name: Generate the presets
         run: |
-          for preset in $(python -c "from granulaire.presets import PRESETS; print(' '.join(PRESETS))"); do
+          for preset in $(python .github/ci_presets.py granulaire.presets); do
             granulaire generate --preset "$preset" --shapes 3 --copies 1 --moisture --out ci-usd > /dev/null
           done
       - name: Validate every file (what usdchecker runs)
