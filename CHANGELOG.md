@@ -6,6 +6,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A Newton layer beside every file, `granulaire_<preset>_newton.usda` (contract section 9,
+  a new engine layer): `newton:contactGap` on each prototype's collider, a quarter of its
+  smallest extent and at most 0.5 mm. The file is unchanged; `python -m granulaire.newton`
+  checks the layer.
+- `generate --engines LIST` (`write_outputs(…, engines=…)`): the engine layers to write
+  (`physx`, `omniphysics`, `newton`, comma-separated, or `none`); by default all of them, as
+  the four Primvaria generators do.
+
 ## [0.5.0b1] - 2026-11-20 (beta)
 
 ### Breaking changes

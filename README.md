@@ -162,6 +162,7 @@ same seed you compare the same scene with a single difference. The options
 | File | Content |
 |---|---|
 | `granulaire_<preset>.usdc` | OpenUSD scene (Blender: File > Import > USD) |
+| `granulaire_<preset>_newton.usda` | the same scene with what Newton needs (contact gaps sized to the grains), a layer over the file, see [Newton layer](https://github.com/drscaon/granulaire/blob/main/docs/openusd.md#newton-layer) |
 | `granulaire_<preset>_omniphysics.usdc` | deformable presets only: the same scene with deformable bodies for NVIDIA OmniPhysics (Omniverse, Isaac Sim 5+), a layer over the file, to open instead of it |
 | `prototype_metrics.csv` | one row per shape: measured descriptors, mass (per moisture state), parameters |
 | `instances.csv` | one row per grain, read back from the file: its identity, its classes (the [semantic labels](https://github.com/drscaon/granulaire/blob/main/docs/openusd.md) renderers turn into segmentation masks), **every drawn value** (`variation:<name>`) and **every measured value** (`measured:<name>`), then its prototype and position: the ground truth |
