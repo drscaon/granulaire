@@ -25,6 +25,7 @@ dependencies = [
     "scikit-image>=0.21",
     "trimesh>=4.0",
     "usd-core>=26.5",  # the OpenUSD validators load from 26.5 on (see README)
+    "primvaria-contract>=0.1.0b1",  # the contract code shared by the four generators
 ]
 
 [project.optional-dependencies]
