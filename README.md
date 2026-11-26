@@ -40,6 +40,10 @@ saturated, rendered from the generated meshes. Each grain is drawn at its own
 scale: sizes range from 0.07 mm (lunar regolith) to ~5 cm (river pebbles).
 Regenerate with `granulaire render-gallery` (see Usage).*
 
+> [!TIP]
+> If Granulaire is useful to you, please ⭐ star the repository. Stars show me
+> what people actually need, so I can decide which features to develop next.
+
 ## What it does
 
 - Generates *N* distinct grain shapes (100 by default) from distributions
