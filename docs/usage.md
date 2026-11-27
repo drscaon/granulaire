@@ -13,6 +13,7 @@ Part of the [Granulaire](../README.md) documentation.
 | `--no-shuffle` / `shuffle=False` | shuffled | place the copies of each shape side by side, shape after shape, instead of mixing them, e.g. to compare shapes |
 | `--seed S` / `seed=S` | 1 | random seed; the same options and seed give the same scene |
 | `--engines LIST` / `write_outputs(…, engines=…)` | `physx,omniphysics,newton` | engine layers written beside the file, comma-separated, or `none`; Granulaire writes the Newton one, and the OmniPhysics one for deformable presets, see [Newton layer](openusd.md#newton-layer) |
+| `--usdz` / `primvaria_contract.usdz.package(file)` | off | also write the pile's file as one `.usdz` package: the file as root layer, the textures and files it references inside, its engine layers beside it in the package (`<name>.usdz[<name>_newton.usda]`); the pack's tables do not list packages |
 
 `--shapes` and `--copies` must be at least 1. Turning shuffling off changes
 only which shape goes in which slot: shapes, positions and orientations stay
