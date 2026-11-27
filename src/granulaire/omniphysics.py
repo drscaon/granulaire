@@ -33,7 +33,9 @@ from pathlib import Path
 import numpy as np
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 
+from .contract import label_materials
 from .moisture import STATE_PARAMS
+from .usd_export import material_label
 
 SUFFIX = "_omniphysics"
 BODY_API = "OmniPhysicsDeformableBodyAPI"
@@ -149,6 +151,9 @@ def write_overlay(usd, preset, prototypes, states=None) -> Path:
                 mass.Set(float(proto["moisture"][s]["mass"]))
                 bind(materials[s])
     stage.GetSessionLayer().Clear()
+    presets = (p.GetAttribute("primvaria:preset") for p in stage.Traverse())
+    key = next((a.Get() for a in presets if a and a.Get()), None)
+    label_materials(stage, material_label(preset, key))  # the deformable materials, as in the file
     layer.Save()
     return out
 

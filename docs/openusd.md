@@ -91,3 +91,5 @@ Each grain also says what it is with OpenUSD's own semantic labels
 segmentation masks: `semantics:labels:class` holds `grain` and the preset (`crushed_gravel`), and
 `semantics:labels:instance` the asset's name. Each grain's instance label is its own name (`g_0042`); its classes are written on the prototype it references. The classes are a
 column of `instances.csv` and are listed in `manifest.json`.
+
+Every material also says what it is made of, in the taxonomy `material`: `semantics:labels:material` holds the preset (`rice`), on the grains' looks and physics materials, and `concrete` on the shared ground's (contract, section 5).
