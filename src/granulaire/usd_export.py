@@ -31,6 +31,7 @@ core OpenUSD has no deformable-body schema yet, so what makes them deformable fo
 OmniPhysics schema and is kept out of this file, in a layer over it (omniphysics.py).
 """
 
+import re
 from pathlib import Path
 
 import numpy as np
@@ -38,11 +39,23 @@ import trimesh
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdSemantics, UsdShade, Vt
 from scipy.spatial import ConvexHull
 
-from .contract import set_group, write_identity, write_labels, write_measured, write_variation
+from .contract import (
+    label_materials,
+    set_group,
+    write_identity,
+    write_labels,
+    write_measured,
+    write_variation,
+)
 from .declared import DECLARED
 from .declared import body as declared_body
 from .ground import ground, physics_scene
 from .moisture import STATE_PARAMS, wet_color
+
+
+def material_label(preset, preset_key=None) -> str:
+    """The material label of a preset's grains: its key ("beach_sand"), or its name as one word."""
+    return preset_key or re.sub(r"[^A-Za-z0-9]+", "_", preset["label"]).strip("_").lower()
 
 
 def _make_material(stage, path, color, roughness, clearcoat=0.0):
@@ -328,6 +341,7 @@ def export_stage(
 
     h = ground_size / 2  # the pile's footprint; the shared ground adds its margin
     ground(stage, (-h, -h), (h, h))
+    label_materials(stage, material_label(preset, preset_key))  # the grains are made of the preset
 
     stage.GetRootLayer().Save()
     return stage
