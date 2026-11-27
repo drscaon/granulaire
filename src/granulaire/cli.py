@@ -20,6 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from primvaria_contract import usdz
+
 from . import __version__, moisture
 from .contract import ENGINES, engine_list
 from .generator import Variations, generate_scene, moisture_applies, summarize, write_outputs
@@ -88,6 +90,9 @@ def _cmd_generate(args) -> int:
     summary = summarize(scene)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     print(f"written to {out}")
+    if args.usdz:
+        for package in usdz.package_pack(out):
+            print(f"package {package}")
     return 0
 
 
@@ -233,6 +238,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=ENGINES,
         metavar="LIST",
         help=f"engine layers beside each file, comma-separated, or none (default: {','.join(ENGINES)})",
+    )
+    g.add_argument(
+        "--usdz",
+        action="store_true",
+        help="also write the pack's file as one .usdz package, with what it depends on and its engine layers",
     )
     g.set_defaults(func=_cmd_generate)
 
